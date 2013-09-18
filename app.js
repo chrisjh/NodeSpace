@@ -8,13 +8,12 @@ var routes = require('./routes');
 var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
+var socketio = require('socket.io');
 
 /**
  * Setup Express and Socket.io
  */
 var app = express();
-var server = app.listen(devPort);
-var io = require('socket.io').listen(server);
 
 // All environments
 app.configure(function() {
@@ -39,6 +38,16 @@ app.configure('development', function() {
     }));
 });
 
+// http routes
+app.get('/', routes.index);
+app.get('/users', user.list);
+
+var server = app.listen(app.get('port'), function() {
+    console.log('Express server listening on port ' + app.get('port'));
+});
+
+var io = socketio.listen(server);
+
 // Socket connection config
 io.configure('production', function() {
     io.enable('browser client etag');
@@ -53,12 +62,17 @@ io.configure('development', function() {
     io.set('transports', ['websocket']);
 });
 
-// http routes
-app.get('/', routes.index);
-app.get('/users', user.list);
+io.sockets.on('connection', function(socket) {
+    socket.emit('news', {
+        hello: 'world'
+    });
+    socket.on('my other event', function(data) {
+        console.log(data);
+    });
+});
+
+
 
 /*http.createServer(app).listen(app.get('port'), function() {
     console.log('Express server listening on port ' + app.get('port'));
 });*/
-
-console.log('Express server listening on port ' + app.get('port'));
