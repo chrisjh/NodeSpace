@@ -69,7 +69,7 @@ io.configure('development', function() {
 /*
     Version 0.0.2 Test
  */
-io.socket.on('connection', function(client) {
+io.sockets.on('connection', function(client) {
     var subscribe = redis.createClient();
     subscribe.subscribe('realtime');
 
