@@ -1,7 +1,19 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+	h1= title
+	p Welcome to #{title}
   
-  p(id="online", style="font-size: 75px;") 0
+	p(id="online", style="font-size: 75px;") 0
+
+	p
+		input(type="text")
+		button Put(T)
+
+	p
+		input(type="text")
+		button Take(T)
+
+	p
+		input(type="text")
+		button Read(T)
