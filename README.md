@@ -3,6 +3,8 @@ NodeSpace
 
 A Tuple Space implementation in Node.js
 
+![alt text](http://chrisjh.bitbucket.org/nodespace/img/architecture.PNG "Architecture")
+
 ### Version
 
 The current version is 0.0.2
