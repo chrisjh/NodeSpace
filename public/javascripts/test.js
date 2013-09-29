@@ -1,7 +1,16 @@
 /*
+    Version 0.0.3
+ */
+var socket = io.connect('http://localhost:8888/', {
+    'reconnect': true,
+    'reconnection delay': 500,
+    'max reconnection attempts': 5
+});
+
+/*
 	Version 0.0.2 Test
  */
-var socket = io.connect('http://localhost:8888/');
+/*var socket = io.connect('http://localhost:8888/');
 
 socket.on('connect', function(data) {
     setStatus('connected');
@@ -25,7 +34,7 @@ function addMessage(data) {
 
 function setStatus(msg) {
     console.log('Connection Status : ' + msg);
-}
+}*/
 
 /*
 	Version 0.0.1 Test
