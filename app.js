@@ -9,15 +9,18 @@ var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
 var socketio = require('socket.io');
-var redis = require('redis');
+var mongoose = require('mongoose');
 
 /**
- * Setup Express and Redis
+ * Setup Express and Mongo
  */
 var app = express();
 
-var client = redis.createClient();
-log('info', 'connected to redis server');
+var NodeSpaceSchema = mongoose.Schema({});
+
+var db = mongoose.connect('mongodb://localhost/nodespace'),
+    , model = mongoose.model('Data', NodeSpaceSchema),
+    Data = mongoose.model('Data');
 
 // All environments
 app.configure(function() {
@@ -67,9 +70,49 @@ io.configure('development', function() {
 });
 
 /*
+    Version 0.0.3 Test
+ */
+var users = {};
+io.sockets.on('connection', function(socket) {
+    socket.on('adduser', function(user) {
+        if (users[user] == user) {
+            socket.emit('sign', {
+                state: 0
+            });
+        } else {
+            socket.user = user;
+            users[user] = user;
+            socket.emit('sign', {
+                state: 1
+            });
+            // Send objects to the new client
+            Data.find({}, function(err, docs) {
+                if (err) {
+                    throw err;
+                }
+                socket.emit('objects', docs);
+            });
+            io.sockets.emit('update', users);
+        }
+    });
+
+    socket.on('handle', function(data) {
+        Data.findById(data.obj[0], function(err, r) {
+            console.log(r);
+        });
+    });
+
+    socket.on('disconnect', function() {
+        //mongoose.disconnect();
+        delete users[socket.user];
+        io.sockets.emit('update', users);
+    });
+});
+
+/*
     Version 0.0.2 Test
  */
-io.sockets.on('connection', function(client) {
+/*io.sockets.on('connection', function(client) {
     var subscribe = redis.createClient();
     subscribe.subscribe('realtime');
 
@@ -86,7 +129,7 @@ io.sockets.on('connection', function(client) {
         log('warn', 'disconnecting from redis');
         subscribe.quit();
     });
-});
+});*/
 
 function log(type, msg) {
 
