@@ -3,17 +3,35 @@ extends layout
 block content
 	h1= title
 	p Welcome to #{title}
-  
-	p(id="online", style="font-size: 75px;") 0
+
+	p(id="connections", style="font-size: 75px;") 0
+
+	//- table(id="visits")
+	//- 	thead
+	//- 		tr
+	//- 			td URL
+	//- 			td IP 
+	//- 			td Timestamp
+	//- 	tbody
+
+	//- table(id="pageViews")
+	//- 	thead
+	//- 		tr
+	//- 			td URL
+	//- 			td Page Views
+	//- 	tbody
 
 	p
-		input(type="text")
-		button Put(T)
+		input(type="text", id="putInput")
+		button(id="put") Put(T)
 
 	p
-		input(type="text")
-		button Take(T)
+		input(type="text", id="readInput")
+		button(id="read") Read(T)
 
 	p
-		input(type="text")
-		button Read(T)
+		input(type="text", id="takeInput")
+		button(id="take") Take(T)
+
+	p(id="foundTuples") None
+	//- p(id="returnedTuples") None
