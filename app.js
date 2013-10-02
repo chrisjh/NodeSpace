@@ -16,11 +16,19 @@ var mongoose = require('mongoose');
  */
 var app = express();
 
-var NodeSpaceSchema = mongoose.Schema({});
+var db = mongoose.connect('mongodb://localhost/nodespace', function(err) {
+    if (err) {
+        console.log(err);
+    } else {
+        console.log('Connected to MongoDB!');
+    }
+});
 
-var db = mongoose.connect('mongodb://localhost/nodespace'),
-    , model = mongoose.model('Data', NodeSpaceSchema),
-    Data = mongoose.model('Data');
+var conn = mongoose.connection;
+
+var NodeSpaceSchema = mongoose.Schema({});
+var Data = mongoose.model('Data', NodeSpaceSchema);
+var data = new Data();
 
 // All environments
 app.configure(function() {
@@ -69,12 +77,76 @@ io.configure('development', function() {
     io.set('transports', ['websocket']);
 });
 
+io.configure(function() {
+    io.set('authorization', function(handshakeData, callback) {
+        if (handshakeData.xdomain) {
+            callback('Cross-domain connections are not allowed');
+        } else {
+            callback(null, true);
+        }
+    });
+});
 /*
-    Version 0.0.3 Test
+    Version 0.0.4 Test
  */
 var users = {};
+var counter = 0;
+
 io.sockets.on('connection', function(socket) {
-    socket.on('adduser', function(user) {
+
+    counter++;
+    console.log('TOTAL CONNECTION NUMBER = ' + counter);
+
+    socket.on('message', function(message) {
+        console.log("Got message: " + message);
+        ip = socket.handshake.address.address;
+        url = message;
+        io.sockets.emit('pageview', {
+            'connections': Object.keys(io.connected).length,
+            'ip': '***.***.***.' + ip.substring(ip.lastIndexOf('.') + 1),
+            'url': url,
+            'xdomain': socket.handshake.xdomain,
+            'timestamp': new Date()
+        });
+    });
+
+    socket.on('findDocument', function(documentData) {
+        console.log('Finding document: ' + documentData);
+        var result;
+
+        conn.collection('aaa').find(documentData, function(err, result) {
+            //TODO handle error
+            console.log(result.tuple)
+            console.log('Found document.');
+            socket.emit('foundDoc', {
+                'foundTuple': 'yes',
+                'tupleIs': result.tuple
+            });
+            /*if(documentData == result.tuple){
+                console.log('Found document.');
+                socket.emit('foundDoc', {
+                    'foundTuple': 'yes',
+                    'tupleIs': result.tuple
+                });
+            } else {
+                console.log('Could not find document.');
+                socket.emit('foundDoc', {
+                    'foundTuple': 'no tuple found'
+                });
+            }*/
+        });
+    });
+
+    socket.on('addDocument', function(documentData) {
+        console.log('Adding document: ' + documentData);
+
+        conn.collection('aaa').insert(documentData, function(err, inserted) {
+            //TODO handle error
+            console.log('Document added.');
+        });
+    });
+
+    /* socket.on('adduser', function(user) {
         if (users[user] == user) {
             socket.emit('sign', {
                 state: 0
@@ -94,42 +166,26 @@ io.sockets.on('connection', function(socket) {
             });
             io.sockets.emit('update', users);
         }
-    });
-
-    socket.on('handle', function(data) {
-        Data.findById(data.obj[0], function(err, r) {
-            console.log(r);
-        });
-    });
+    });*/
 
     socket.on('disconnect', function() {
         //mongoose.disconnect();
-        delete users[socket.user];
-        io.sockets.emit('update', users);
+        //delete users[socket.user];
+        //io.sockets.emit('update', users);
+        counter--;
+        console.log('TOTAL CONNECTION NUMBER = ' + counter);
+        io.sockets.emit('pageview', {
+            'connections': Object.keys(io.connected).length
+        });
+
+        if (counter == 0) {
+            console.log('Removing tuples from the space...');
+            conn.collection('aaa').drop(function(err, drop) {
+                //TODO handle error
+            });
+        }
     });
 });
-
-/*
-    Version 0.0.2 Test
- */
-/*io.sockets.on('connection', function(client) {
-    var subscribe = redis.createClient();
-    subscribe.subscribe('realtime');
-
-    subscribe.on("message", function(channel, message) {
-        client.send(message);
-        log('msg', "received from channel #" + channel + " : " + message);
-    });
-
-    client.on('message', function(msg) {
-        log('debug', msg);
-    });
-
-    client.on('disconnect', function() {
-        log('warn', 'disconnecting from redis');
-        subscribe.quit();
-    });
-});*/
 
 function log(type, msg) {
 
@@ -154,15 +210,3 @@ function log(type, msg) {
     }
     console.log(color + '   ' + type + '  - ' + reset + msg);
 }
-
-/*
-    Version 0.0.1 Test
- */
-/*io.sockets.on('connection', function(socket) {
-    socket.emit('news', {
-        hello: 'world'
-    });
-    socket.on('my other event', function(data) {
-        console.log(data);
-    });
-});*/
