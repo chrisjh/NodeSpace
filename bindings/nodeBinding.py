@@ -1,4 +1,5 @@
 #https://github.com/invisibleroads/socketIO-client
+#Must install socketIO-client with pip first
 from socketIO_client import SocketIO
 import json
 
@@ -19,6 +20,7 @@ def encode(o):
 
 #Put function
 def put(tuple):
+	print tuple
 	with SocketIO(serverAddress,port) as socketIO:
 		socketIO.emit('addDocument', tuple)
 
@@ -31,7 +33,13 @@ def read(key):
 #Get/take function
 #def get(key):
 
-print "Connecting"
-tuple = {'a':1}
-put(tuple)
+#####################################################################
+#TEST
 
+print "Connecting..."
+tuple = {'a':1}
+try:
+	put(tuple)
+	print "Add successful."
+except:
+	print "Add failed."

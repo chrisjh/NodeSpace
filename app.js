@@ -116,7 +116,7 @@ io.sockets.on('connection', function(socket) {
 
         conn.collection('aaa').find(documentData, function(err, result) {
             //TODO handle error
-            console.log(result.tuple)
+            console.log(result.tuple);
             console.log('Found document.');
             socket.emit('foundDoc', {
                 'foundTuple': 'yes',
@@ -135,6 +135,11 @@ io.sockets.on('connection', function(socket) {
                 });
             }*/
         });
+    });
+
+    socket.on('retrieveDocument', function(documentData) {
+        console.log('Retrieving document: ' + documentData);
+        //Must find document, then remove it from the database.
     });
 
     socket.on('addDocument', function(documentData) {
