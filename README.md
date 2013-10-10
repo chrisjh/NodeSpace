@@ -7,7 +7,7 @@ A Tuple Space implementation in Node.js
 
 ### Version
 
-The current version is 0.0.4
+The current version is 0.0.5
 
 Releases will be numbered with the following guidelines:
 	
@@ -15,12 +15,12 @@ Releases will be numbered with the following guidelines:
 
 ### Getting Started
 
-Download and install [Node.js](http://www.nodejs.org) and [Redis](http://redis.io/).
+Download and install [Node.js](http://www.nodejs.org) and [MongoDB](http://mongodb.org).
 
 Install project dependencies with:
 
 `npm install`
 
-Start Redis, then run the app with:
+Start MongoDB, then run the app with:
 
 `node app`
