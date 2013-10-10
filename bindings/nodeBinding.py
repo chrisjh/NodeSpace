@@ -41,6 +41,7 @@ def put(tuple):
 #Read function
 def read(key):
 	socketIO.emit('findDocument', key)
+	
 	socketIO.on('foundDocument',on_server_reply)
 	#TODO:
 	#NEED TO FIX THIS WAITING TIME -- can probably do it without waiting...

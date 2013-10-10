@@ -69,7 +69,7 @@ socket.on('connect', function(data) {
             'tuple': query
         }
 
-        console.log('Trying to find tuple...')
+        console.log('Trying to find tuple...');
 
         socket.emit('findDocument', document);
     });

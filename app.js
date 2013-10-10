@@ -94,54 +94,76 @@ var counter = 0;
 
 io.sockets.on('connection', function(socket) {
 
-    counter++;
-    console.log('TOTAL CONNECTION NUMBER = ' + counter);
+        counter++;
+        console.log('TOTAL CONNECTION NUMBER = ' + counter);
 
-    socket.on('message', function(message) {
-        console.log("Got message: " + message);
-        ip = socket.handshake.address.address;
-        url = message;
-        io.sockets.emit('pageview', {
-            'connections': Object.keys(io.connected).length,
-            'ip': '***.***.***.' + ip.substring(ip.lastIndexOf('.') + 1),
-            'url': url,
-            'xdomain': socket.handshake.xdomain,
-            'timestamp': new Date()
+        //Server receives a message that is not find, retreive, or add
+
+        socket.on('message', function(message) {
+            console.log("Got message: " + message);
+            ip = socket.handshake.address.address;
+            url = message;
+            io.sockets.emit('pageview', {
+                'connections': Object.keys(io.connected).length,
+                'ip': '***.***.***.' + ip.substring(ip.lastIndexOf('.') + 1),
+                'url': url,
+                'xdomain': socket.handshake.xdomain,
+                'timestamp': new Date()
+            });
         });
-    });
 
-    socket.on('findDocument', function(documentData) {
-        console.log('Finding document: ' + JSON.stringify(documentData));
+        //Processing for read()
+        socket.on('findDocument', function(documentData) {
+                console.log('Finding document: ' + JSON.stringify(documentData));
 
-        conn.collection('aaa').find(documentData, function(err, result) {
-            if (err){
-                console.log('There was an error finding the document.');
-            }
-            /*else if (JSON.stringify(documentData) != JSON.stringify(result)) {
+                conn.collection('aaa').find(documentData, function(err, result) {
+                        if (err) {
+                            console.log('There was an error finding the document.');
+                        }
+                        /*else if (JSON.stringify(documentData) != JSON.stringify(result)) {
                 console.log('Could not find tuple.');
                 socket.emit('foundDocument', {
                     'foundTuple': 'no'
                 });
-            }*/ else {
-                console.log('Found document.');
-                socket.emit('foundDocument', {
-                    'foundTuple': 'yes',
-                    'tupleIs': result
+            }*/
+                        else {
+                            console.log(result.tuple);
+                            console.log('Found document.');
+                            socket.emit('foundDoc', {
+                                'foundTuple': 'yes',
+                                'tupleIs': result.tuple
+                            });
+                        });
                 });
-            }
-        });
-    });
 
-    socket.on('addDocument', function(documentData) {
-        console.log('Adding document: ' + JSON.stringify(documentData));
+            //Processing for take()
+            socket.on('retrieveDocument', function(documentData) {
+                console.log('Retrieving document: ' + documentData);
+                var result;
+                //Must find document, then remove it from the database.
+                //
+                conn.collection('aaa').find(documentData, function(err, result) {
+                    //TODO handle error
+                    console.log(result.tuple);
+                    console.log('Found document.');
+                    socket.emit('foundDoc', {
+                        'foundTuple': 'yes',
+                        'tupleIs': result.tuple
+                    });
+                });
+            });
 
-        conn.collection('aaa').insert(documentData, function(err, inserted) {
-            //TODO handle error
-            console.log('Document added.');
-        });
-    });
+            //Processing for put()
+            socket.on('addDocument', function(documentData) {
+                console.log('Adding document: ' + JSON.stringify(documentData));
 
-    /* socket.on('adduser', function(user) {
+                conn.collection('aaa').insert(documentData, function(err, inserted) {
+                    //TODO handle error
+                    console.log('Document added.');
+                });
+            });
+
+            /* socket.on('adduser', function(user) {
         if (users[user] == user) {
             socket.emit('sign', {
                 state: 0
@@ -163,45 +185,45 @@ io.sockets.on('connection', function(socket) {
         }
     });*/
 
-    socket.on('disconnect', function() {
-        //mongoose.disconnect();
-        //delete users[socket.user];
-        //io.sockets.emit('update', users);
-        counter--;
-        console.log('TOTAL CONNECTION NUMBER = ' + counter);
-        io.sockets.emit('pageview', {
-            'connections': Object.keys(io.connected).length
-        });
+            socket.on('disconnect', function() {
+                //mongoose.disconnect();
+                //delete users[socket.user];
+                //io.sockets.emit('update', users);
+                counter--;
+                console.log('TOTAL CONNECTION NUMBER = ' + counter);
+                io.sockets.emit('pageview', {
+                    'connections': Object.keys(io.connected).length
+                });
 
-        if (counter == 0) {
+                /*if (counter == 0) {
             console.log('Removing tuples from the space...');
             conn.collection('aaa').drop(function(err, drop) {
                 //TODO handle error
             });
+        }*/
+            });
+        });
+
+    function log(type, msg) {
+
+        var color = '\u001b[0m',
+            reset = '\u001b[0m';
+
+        switch (type) {
+            case "info":
+                color = '\u001b[36m';
+                break;
+            case "warn":
+                color = '\u001b[33m';
+                break;
+            case "error":
+                color = '\u001b[31m';
+                break;
+            case "msg":
+                color = '\u001b[34m';
+                break;
+            default:
+                color = '\u001b[0m';
         }
-    });
-});
-
-function log(type, msg) {
-
-    var color = '\u001b[0m',
-        reset = '\u001b[0m';
-
-    switch (type) {
-        case "info":
-            color = '\u001b[36m';
-            break;
-        case "warn":
-            color = '\u001b[33m';
-            break;
-        case "error":
-            color = '\u001b[31m';
-            break;
-        case "msg":
-            color = '\u001b[34m';
-            break;
-        default:
-            color = '\u001b[0m';
+        console.log(color + '   ' + type + '  - ' + reset + msg);
     }
-    console.log(color + '   ' + type + '  - ' + reset + msg);
-}
