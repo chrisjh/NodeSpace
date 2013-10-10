@@ -56,12 +56,13 @@ socket.on('connect', function(data) {
             'tuple': tuple
         }
 
+        console.log('Trying to add ' + JSON.stringify(document));
         console.log('Adding document...');
 
         socket.emit('addDocument', document);
     });
 
-    $('#read').click(function(){
+    $('#read').click(function() {
         var query = $('#readTuple').val();
 
         var document = {
@@ -73,11 +74,15 @@ socket.on('connect', function(data) {
         socket.emit('findDocument', document);
     });
 
-    socket.on('foundDoc', function(data){
-        console.log('Found tuple!');
-        console.log(data);
-        $('#foundTuples').html(data.foundTuple);
-        $('#returnedTuples').html(data.tupleIs);
+    socket.on('foundDocument', function(data) {
+        if (data.foundTuple === 'no') {
+            console.log('Could not find tuple.')
+        } else {
+            console.log('Found tuple!');
+            console.log(data);
+            $('#foundTuples').html(data.foundTuple);
+            $('#returnedTuples').html(data.tupleIs);
+        }
     });
 });
 

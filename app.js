@@ -111,34 +111,29 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('findDocument', function(documentData) {
-        console.log('Finding document: ' + documentData);
-        var result;
+        console.log('Finding document: ' + JSON.stringify(documentData));
 
         conn.collection('aaa').find(documentData, function(err, result) {
-            //TODO handle error
-            console.log(result.tuple)
-            console.log('Found document.');
-            socket.emit('foundDoc', {
-                'foundTuple': 'yes',
-                'tupleIs': result.tuple
-            });
-            /*if(documentData == result.tuple){
+            if (err){
+                console.log('There was an error finding the document.');
+            }
+            /*else if (JSON.stringify(documentData) != JSON.stringify(result)) {
+                console.log('Could not find tuple.');
+                socket.emit('foundDocument', {
+                    'foundTuple': 'no'
+                });
+            }*/ else {
                 console.log('Found document.');
-                socket.emit('foundDoc', {
+                socket.emit('foundDocument', {
                     'foundTuple': 'yes',
-                    'tupleIs': result.tuple
+                    'tupleIs': result
                 });
-            } else {
-                console.log('Could not find document.');
-                socket.emit('foundDoc', {
-                    'foundTuple': 'no tuple found'
-                });
-            }*/
+            }
         });
     });
 
     socket.on('addDocument', function(documentData) {
-        console.log('Adding document: ' + documentData);
+        console.log('Adding document: ' + JSON.stringify(documentData));
 
         conn.collection('aaa').insert(documentData, function(err, inserted) {
             //TODO handle error
