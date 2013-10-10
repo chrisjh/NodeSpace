@@ -97,6 +97,8 @@ io.sockets.on('connection', function(socket) {
     counter++;
     console.log('TOTAL CONNECTION NUMBER = ' + counter);
 
+    //Server receives a message that is not find, retreive, or add
+    
     socket.on('message', function(message) {
         console.log("Got message: " + message);
         ip = socket.handshake.address.address;
@@ -110,10 +112,28 @@ io.sockets.on('connection', function(socket) {
         });
     });
 
+    //Processing for read()
     socket.on('findDocument', function(documentData) {
         console.log('Finding document: ' + documentData);
         var result;
 
+        conn.collection('aaa').find(documentData, function(err, result) {
+            //TODO handle error
+            console.log(result.tuple);
+            console.log('Found document.');
+            socket.emit('foundDoc', {
+                'foundTuple': 'yes',
+                'tupleIs': result.tuple
+            });
+        });
+    });
+
+    //Processing for take()
+    socket.on('retrieveDocument', function(documentData) {
+        console.log('Retrieving document: ' + documentData);
+        var result;
+        //Must find document, then remove it from the database.
+        //
         conn.collection('aaa').find(documentData, function(err, result) {
             //TODO handle error
             console.log(result.tuple);
@@ -137,11 +157,7 @@ io.sockets.on('connection', function(socket) {
         });
     });
 
-    socket.on('retrieveDocument', function(documentData) {
-        console.log('Retrieving document: ' + documentData);
-        //Must find document, then remove it from the database.
-    });
-
+    //Processing for put()
     socket.on('addDocument', function(documentData) {
         console.log('Adding document: ' + documentData);
 
@@ -183,12 +199,12 @@ io.sockets.on('connection', function(socket) {
             'connections': Object.keys(io.connected).length
         });
 
-        if (counter == 0) {
+        /*if (counter == 0) {
             console.log('Removing tuples from the space...');
             conn.collection('aaa').drop(function(err, drop) {
                 //TODO handle error
             });
-        }
+        }*/
     });
 });
 
