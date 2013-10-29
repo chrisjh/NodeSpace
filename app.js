@@ -9,26 +9,17 @@ var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
 var socketio = require('socket.io');
-var mongoose = require('mongoose');
+var mongojs = require('mongojs');
 
 /**
  * Setup Express and Mongo
  */
 var app = express();
 
-var db = mongoose.connect('mongodb://localhost/nodespace', function(err) {
-    if (err) {
-        console.log(err);
-    } else {
-        console.log('Connected to MongoDB!');
-    }
-});
+var db = mongojs('nodespace');
+var collection = db.collection('space');
 
-var conn = mongoose.connection;
-
-var NodeSpaceSchema = mongoose.Schema({});
-var Data = mongoose.model('Data', NodeSpaceSchema);
-var data = new Data();
+var app = express();
 
 // All environments
 app.configure(function() {
@@ -86,144 +77,138 @@ io.configure(function() {
         }
     });
 });
+
 /*
-    Version 0.0.4 Test
+    Version 0.1.0 Test
  */
 var users = {};
 var counter = 0;
 
+function IsValidJson(str) {
+    try {
+        JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
+
 io.sockets.on('connection', function(socket) {
 
-        counter++;
+    counter++;
+    console.log('TOTAL CONNECTION NUMBER = ' + counter);
+
+    //Server receives a message that is not find, retreive, or add
+
+    socket.on('message', function(message) {
+        console.log("Got message: " + message);
+        ip = socket.handshake.address.address;
+        url = message;
+        io.sockets.emit('pageview', {
+            'connections': Object.keys(io.connected).length,
+            'ip': '***.***.***.' + ip.substring(ip.lastIndexOf('.') + 1),
+            'url': url,
+            'xdomain': socket.handshake.xdomain,
+            'timestamp': new Date()
+        });
+    });
+
+    //Processing for put()
+    socket.on('addDocument', function(documentData) {
+        console.log('Adding document: ' + JSON.stringify(documentData));
+
+        collection.insert(documentData, function(err, inserted) {
+            //TODO handle error
+            console.log('Document added.');
+        });
+    });
+
+    //Processing for read()
+    socket.on('findDocument', function(documentData) {
+        console.log('Finding document: ' + JSON.stringify(documentData));
+
+        collection.find(documentData, {
+            _id: 0
+        }, function(err, result) {
+
+            if (err) {
+                console.log(err);
+                console.log('There was an error finding the document.');
+            } else {
+
+                var edited_result = JSON.stringify(result);
+                edited_result = edited_result.substring(1);
+                edited_result = edited_result.substring(0, edited_result.length - 1);
+
+                if (!IsValidJson(edited_result)) {
+                    console.log('Could not find tuple.');
+                    socket.emit('foundDocument', {
+                        'foundTuple': 'no'
+                    });
+                } else {
+                    final_result = JSON.parse(edited_result);
+                    if (JSON.stringify(documentData) === JSON.stringify(final_result)) {
+                        console.log('Found document: ' + JSON.stringify(final_result));
+                        socket.emit('foundDocument', {
+                            'foundTuple': 'yes',
+                            'tupleIs': final_result
+                        });
+                    }
+                }
+            }
+        });
+    });
+    
+    //TODO: Actually remove tuples from the space.
+    //Processing for take()
+    socket.on('takeDocument', function(documentData) {
+        console.log('Taking document: ' + JSON.stringify(documentData));
+
+        collection.find(documentData, {
+            _id: 0
+        }, function(err, result) {
+
+            if (err) {
+                console.log(err);
+                console.log('There was an error finding the document.');
+            } else {
+
+                var edited_result = JSON.stringify(result);
+                edited_result = edited_result.substring(1);
+                edited_result = edited_result.substring(0, edited_result.length - 1);
+
+                if (!IsValidJson(edited_result)) {
+                    console.log('Could not find tuple.');
+                    socket.emit('foundDocument', {
+                        'foundTuple': 'no'
+                    });
+                } else {
+                    final_result = JSON.parse(edited_result);
+                    if (JSON.stringify(documentData) === JSON.stringify(final_result)) {
+                        console.log('Found document: ' + JSON.stringify(final_result));
+                        socket.emit('foundDocument', {
+                            'foundTuple': 'yes',
+                            'tupleIs': final_result
+                        });
+                    }
+                }
+            }
+        });
+    });
+
+
+    socket.on('disconnect', function() {
+        counter--;
         console.log('TOTAL CONNECTION NUMBER = ' + counter);
-
-        //Server receives a message that is not find, retreive, or add
-
-        socket.on('message', function(message) {
-            console.log("Got message: " + message);
-            ip = socket.handshake.address.address;
-            url = message;
-            io.sockets.emit('pageview', {
-                'connections': Object.keys(io.connected).length,
-                'ip': '***.***.***.' + ip.substring(ip.lastIndexOf('.') + 1),
-                'url': url,
-                'xdomain': socket.handshake.xdomain,
-                'timestamp': new Date()
-            });
+        io.sockets.emit('pageview', {
+            'connections': Object.keys(io.connected).length
         });
 
-        //Processing for read()
-        socket.on('findDocument', function(documentData) {
-                console.log('Finding document: ' + JSON.stringify(documentData));
-
-                conn.collection('aaa').find(documentData, function(err, result) {
-                        if (err) {
-                            console.log('There was an error finding the document.');
-                        }
-                        /*else if (JSON.stringify(documentData) != JSON.stringify(result)) {
-                console.log('Could not find tuple.');
-                socket.emit('foundDocument', {
-                    'foundTuple': 'no'
-                });
-            }*/
-                        else {
-                            console.log(result.tuple);
-                            console.log('Found document.');
-                            socket.emit('foundDoc', {
-                                'foundTuple': 'yes',
-                                'tupleIs': result.tuple
-                            });
-                        });
-                });
-
-            //Processing for take()
-            socket.on('retrieveDocument', function(documentData) {
-                console.log('Retrieving document: ' + documentData);
-                var result;
-                //Must find document, then remove it from the database.
-                //
-                conn.collection('aaa').find(documentData, function(err, result) {
-                    //TODO handle error
-                    console.log(result.tuple);
-                    console.log('Found document.');
-                    socket.emit('foundDoc', {
-                        'foundTuple': 'yes',
-                        'tupleIs': result.tuple
-                    });
-                });
-            });
-
-            //Processing for put()
-            socket.on('addDocument', function(documentData) {
-                console.log('Adding document: ' + JSON.stringify(documentData));
-
-                conn.collection('aaa').insert(documentData, function(err, inserted) {
-                    //TODO handle error
-                    console.log('Document added.');
-                });
-            });
-
-            /* socket.on('adduser', function(user) {
-        if (users[user] == user) {
-            socket.emit('sign', {
-                state: 0
-            });
-        } else {
-            socket.user = user;
-            users[user] = user;
-            socket.emit('sign', {
-                state: 1
-            });
-            // Send objects to the new client
-            Data.find({}, function(err, docs) {
-                if (err) {
-                    throw err;
-                }
-                socket.emit('objects', docs);
-            });
-            io.sockets.emit('update', users);
-        }
-    });*/
-
-            socket.on('disconnect', function() {
-                //mongoose.disconnect();
-                //delete users[socket.user];
-                //io.sockets.emit('update', users);
-                counter--;
-                console.log('TOTAL CONNECTION NUMBER = ' + counter);
-                io.sockets.emit('pageview', {
-                    'connections': Object.keys(io.connected).length
-                });
-
-                /*if (counter == 0) {
+        /*if (counter == 0) {
             console.log('Removing tuples from the space...');
             conn.collection('aaa').drop(function(err, drop) {
                 //TODO handle error
             });
         }*/
-            });
-        });
-
-    function log(type, msg) {
-
-        var color = '\u001b[0m',
-            reset = '\u001b[0m';
-
-        switch (type) {
-            case "info":
-                color = '\u001b[36m';
-                break;
-            case "warn":
-                color = '\u001b[33m';
-                break;
-            case "error":
-                color = '\u001b[31m';
-                break;
-            case "msg":
-                color = '\u001b[34m';
-                break;
-            default:
-                color = '\u001b[0m';
-        }
-        console.log(color + '   ' + type + '  - ' + reset + msg);
-    }
+    });
+});
