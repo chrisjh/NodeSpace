@@ -1,5 +1,5 @@
 /*
-    Version 0.0.4
+    Version 0.1.0
  */
 var socket = io.connect('http://localhost:8888/', {
     'reconnect': true,
@@ -50,38 +50,59 @@ socket.on('connect', function(data) {
     $('#put').click(function() {
         console.log('Putting tuple in the space...')
 
-        var tuple = $('#putInput').val();
+        var tuples = $('#putInput').val();
 
-        var document = {
-            'tuple': tuple
-        }
+        /*var construct = {
+            tuples: tuples.replace(/,$/, "").split(",").map(function(tuple) {
+                for (var i = 0; i < tuples.length; i++) {
+                    return {
+                        i: tuple
+                    }
+                }
+            });
+        }*/
 
-        console.log('Trying to add ' + JSON.stringify(document));
+        var constructJson = {
+            tuples: tuples.replace(/,$/, "").split(",").map(function(tuple) {
+                return {
+                    i: tuple
+                };
+            })
+        };
+
+        console.log('Trying to add ' + JSON.stringify(constructJson));
         console.log('Adding document...');
 
-        socket.emit('addDocument', document);
+        socket.emit('addDocument', constructJson);
     });
 
     $('#read').click(function() {
-        var query = $('#readTuple').val();
+        var tuples = $('#readInput').val();
 
-        var document = {
-            'tuple': query
-        }
+        var constructJson = {
+            tuples: tuples.replace(/,$/, "").split(",").map(function(tuple) {
+                return {
+                    i: tuple
+                };
+            })
+        };
 
-        console.log('Trying to find tuple...');
+        console.log('Trying to find tuple ' + JSON.stringify(constructJson));
 
-        socket.emit('findDocument', document);
+        socket.emit('findDocument', constructJson);
     });
 
     socket.on('foundDocument', function(data) {
-        if (data.foundTuple === 'no') {
-            console.log('Could not find tuple.')
+        console.log(data.foundTuple);
+        if (data.foundTuple == 'no') {
+            console.log('Could not find tuple.');
+            $('#foundTuple').html("Found tuple? " + data.foundTuple);
+            $('#returnedTuple').html("None");
         } else {
             console.log('Found tuple!');
             console.log(data);
-            $('#foundTuples').html(data.foundTuple);
-            $('#returnedTuples').html(data.tupleIs);
+            $('#foundTuple').html("Found tuple? " + data.foundTuple);
+            $('#returnedTuple').html(JSON.stringify(data.tupleIs));
         }
     });
 });
