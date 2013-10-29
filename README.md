@@ -7,7 +7,7 @@ A Tuple Space implementation in Node.js
 
 ### Version
 
-The current version is 0.0.5
+The current version is 0.1.0
 
 Releases will be numbered with the following guidelines:
 	
