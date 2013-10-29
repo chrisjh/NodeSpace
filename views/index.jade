@@ -4,22 +4,7 @@ block content
 	h1= title
 	p Welcome to #{title}
 
-	p(id="connections", style="font-size: 75px;") 0
-
-	//- table(id="visits")
-	//- 	thead
-	//- 		tr
-	//- 			td URL
-	//- 			td IP 
-	//- 			td Timestamp
-	//- 	tbody
-
-	//- table(id="pageViews")
-	//- 	thead
-	//- 		tr
-	//- 			td URL
-	//- 			td Page Views
-	//- 	tbody
+	p(id="connections", style="font-size: 25px;") 1
 
 	p
 		input(type="text", id="putInput")
@@ -33,5 +18,5 @@ block content
 		input(type="text", id="takeInput")
 		button(id="take") Take(T)
 
-	p(id="foundTuples") None
-	//- p(id="returnedTuples") None
+	p(id="foundTuple") Found tuple?
+	p(id="returnedTuple") None
