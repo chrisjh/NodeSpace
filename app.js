@@ -79,7 +79,7 @@ io.configure(function() {
 });
 
 /*
-    Version 0.1.0 Test
+    Version 0.1.1 Test
  */
 var users = {};
 var counter = 0;
@@ -114,20 +114,42 @@ io.sockets.on('connection', function(socket) {
     });
 
     //Processing for put()
-    socket.on('addDocument', function(documentData) {
-        console.log('Adding document: ' + JSON.stringify(documentData));
+    socket.on('addDocument', function(tuples) {
 
-        collection.insert(documentData, function(err, inserted) {
+        tuples = tuples.toString();
+
+        var constructJson = {
+            object: tuples.replace(/,$/, "").split(",").map(function(tuple) {
+                return {
+                    i: tuple
+                };
+            })
+        };
+
+        console.log('Adding document: ' + JSON.stringify(constructJson));
+
+        collection.insert(constructJson, function(err, inserted) {
             //TODO handle error
             console.log('Document added.');
         });
     });
 
     //Processing for read()
-    socket.on('findDocument', function(documentData) {
-        console.log('Finding document: ' + JSON.stringify(documentData));
+    socket.on('findDocument', function(tuples) {
 
-        collection.find(documentData, {
+        tuples = tuples.toString();
+
+        var constructJson = {
+            object: tuples.replace(/,$/, "").split(",").map(function(tuple) {
+                return {
+                    i: tuple
+                };
+            })
+        };
+
+        console.log('Trying to find tuple ' + JSON.stringify(constructJson));
+
+        collection.find(constructJson, {
             _id: 0
         }, function(err, result) {
 
@@ -147,18 +169,18 @@ io.sockets.on('connection', function(socket) {
                     });
                 } else {
                     final_result = JSON.parse(edited_result);
-                    if (JSON.stringify(documentData) === JSON.stringify(final_result)) {
+                    if (JSON.stringify(constructJson) === JSON.stringify(final_result)) {
                         console.log('Found document: ' + JSON.stringify(final_result));
                         socket.emit('foundDocument', {
                             'foundTuple': 'yes',
-                            'tupleIs': final_result
+                            'tuple': final_result
                         });
                     }
                 }
             }
         });
     });
-    
+
     //TODO: Actually remove tuples from the space.
     //Processing for take()
     socket.on('takeDocument', function(documentData) {

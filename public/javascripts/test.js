@@ -1,5 +1,5 @@
 /*
-    Version 0.1.0
+    Version 0.1.1
  */
 var socket = io.connect('http://localhost:8888/', {
     'reconnect': true,
@@ -43,7 +43,6 @@ socket.on('connect', function(data) {
                 };
                 $('#pageViews tbody').append('<tr><td>' + msg.url + '</td><td id="page' + lastPageId + '">1</td></tr>');
             }
-
         }
     });
 
@@ -52,44 +51,15 @@ socket.on('connect', function(data) {
 
         var tuples = $('#putInput').val();
 
-        /*var construct = {
-            tuples: tuples.replace(/,$/, "").split(",").map(function(tuple) {
-                for (var i = 0; i < tuples.length; i++) {
-                    return {
-                        i: tuple
-                    }
-                }
-            });
-        }*/
+        console.log(tuples);
 
-        var constructJson = {
-            tuples: tuples.replace(/,$/, "").split(",").map(function(tuple) {
-                return {
-                    i: tuple
-                };
-            })
-        };
-
-        console.log('Trying to add ' + JSON.stringify(constructJson));
-        console.log('Adding document...');
-
-        socket.emit('addDocument', constructJson);
+        socket.emit('addDocument', tuples);
     });
 
     $('#read').click(function() {
         var tuples = $('#readInput').val();
 
-        var constructJson = {
-            tuples: tuples.replace(/,$/, "").split(",").map(function(tuple) {
-                return {
-                    i: tuple
-                };
-            })
-        };
-
-        console.log('Trying to find tuple ' + JSON.stringify(constructJson));
-
-        socket.emit('findDocument', constructJson);
+        socket.emit('findDocument', tuples);
     });
 
     socket.on('foundDocument', function(data) {
@@ -102,7 +72,10 @@ socket.on('connect', function(data) {
             console.log('Found tuple!');
             console.log(data);
             $('#foundTuple').html("Found tuple? " + data.foundTuple);
-            $('#returnedTuple').html(JSON.stringify(data.tupleIs));
+            $('#returnedTuple').html(JSON.stringify(data.tuple));
+            console.log("The first field is: " + data.tuple.object[0].i);
+            console.log("The second field is: " + data.tuple.object[1].i);
+            console.log("The third field is: " + data.tuple.object[2].i);
         }
     });
 });
