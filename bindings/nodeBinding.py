@@ -6,6 +6,7 @@
 # 
 # The command in Unix based systems is:
 # `pip install -U socketIO-client`
+# `pip install simplejson`
 #
 # ---   Using this binding for one of your programs?   ---   
 #
@@ -15,6 +16,7 @@
 
 from socketIO_client import SocketIO
 import json
+import time
 
 #Needs to be declared and set in client code
 SOCKET_IO_HOST = 'localhost'
@@ -31,11 +33,11 @@ def emit():
 
 #Method to encode a Python object to JSON to be used as the argument of put(tuple)
 def encode(o):
-	return JSONEncoder().encode(o)
+	return json.dumps(o)
 
 #Put function
 def put(tuple):
-	print tuple
+	#print tuple
 	socketIO.emit('addDocument', tuple)
 
 #Read function
@@ -55,17 +57,5 @@ def read(key):
 # ---   TEST   --- 
 # 
 
-print "Connecting..."
-tuple = {'a': 'hello'}
-tup = 'hello'
-try:
-	put(tuple)
-	print "Add successful."
-except:
-	print "Add failed."
-try:
-	read(tup)
-	print "Read successful."
-	#print mostRecentTuple
-except:
-	print "Read failed."
+tuple = {'i': 'hello'}
+print encode(tuple)
