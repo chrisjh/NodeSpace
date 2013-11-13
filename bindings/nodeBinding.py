@@ -6,6 +6,7 @@
 # 
 # The command in Unix based systems is:
 # `pip install -U socketIO-client`
+# `pip install simplejson`
 #
 # ---   Using this binding for one of your programs?   ---   
 #
@@ -30,11 +31,12 @@ def processTuple(*args):
 
 #Method to encode a Python object to JSON to be used as the argument of put(tuple)
 def encode(o):
-	return JSONEncoder().encode(o)
+	return json.dumps(o)
 
 #Put function
 def put(tuple):
 	print "Adding: "+tuple
+	#print tuple
 	socketIO.emit('addDocument', tuple)
 
 #Read function
@@ -91,3 +93,5 @@ print "Connecting..."
 #putTest()
 readTest()
 print "Test complete."
+tuple = {'i': 'hello'}
+print encode(tuple)
