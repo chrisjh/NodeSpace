@@ -1,4 +1,4 @@
-package javaBinding;
+//package javaBinding;
 
 import java.awt.AWTException;
 import java.awt.Robot;
@@ -62,9 +62,9 @@ public class NodeBinding {
             	}
             }
         });
-        System.out.println("Done.");
-        socket.emit("disconnect");
-
+        
+        
+        socket.disconnect();
 	}
 	
 	//Copy and paste these functions into your Java program
@@ -85,6 +85,76 @@ public class NodeBinding {
 		System.out.println(args);
 	}
 	
+	public static void putTest(SocketIO socket){
+		//----
+		try{
+			put("hello,from,java",socket);
+		}catch(Exception e){
+			System.out.println("Error");
+			e.printStackTrace();
+		}
+		//----
+		try{
+			put("this,is,from,james,martin",socket);
+		}catch(Exception e){
+			System.out.println("Error");
+			e.printStackTrace();
+		}
+		//----
+		try{
+			put("foo,bar",socket);
+		}catch(Exception e){
+			System.out.println("Error");
+			e.printStackTrace();
+		}
+	}
 	
+	public static void readTest(SocketIO socket){
+		//----
+		try{
+			read("hello,from,java",socket);
+		}catch(Exception e){
+			System.out.println("Error");
+			e.printStackTrace();
+		}
+		//----
+		try{
+			read("this,is,from,james,martin",socket);
+		}catch(Exception e){
+			System.out.println("Error");
+			e.printStackTrace();
+		}
+		//----
+		try{
+			read("foo,bar",socket);
+		}catch(Exception e){
+			System.out.println("Error");
+			e.printStackTrace();
+		}
+	}
+	
+	public static void takeTest(SocketIO socket){
+		//----
+		try{
+			take("hello,from,java",socket);
+		}catch(Exception e){
+			System.out.println("Error");
+			e.printStackTrace();
+		}
+		//----
+		try{
+			take("this,is,from,james,martin",socket);
+		}catch(Exception e){
+			System.out.println("Error");
+			e.printStackTrace();
+		}
+		//----
+		try{
+			take("foo,bar",socket);
+		}catch(Exception e){
+			System.out.println("Error");
+			e.printStackTrace();
+		}
+	}
 
 }

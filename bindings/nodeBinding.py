@@ -11,7 +11,6 @@
 #
 # Simply copy the code up until the line of hashes and paste it into your script.
 # Next, set the `SOCKET_IO_HOST` and `SOCKET_IO_PORT` values to the IP address and port number of the server your NodeSpace is running on
-# 
 
 from socketIO_client import SocketIO
 import json
@@ -85,7 +84,7 @@ def readTest():
 		print "A read failed or a timeout occurred"
 
 # 
-# ---   MAIN THREAD   --- 
+# --- MAIN THREAD --- 
 # 
 
 print "Connecting..."
