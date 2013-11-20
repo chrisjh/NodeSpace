@@ -44,15 +44,15 @@ def read(key):
 	#try:
 	socketIO.on('foundDocument',processTuple)
 	socketIO.emit('findDocument', key)
-	socketIO.wait_for_callbacks(seconds=3)
+	socketIO.wait(seconds=1)
 	#except:
 		#print "Error or timeout"
 		
 #Get/take function
 def take(key):
-	socketIO.on('foundDocument',on_server_reply)
+	socketIO.on('foundDocument',processTuple)
 	socketIO.emit('takeDocument', key)
-	socketIO.wait_for_callbacks(second=3)
+	socketIO.wait(second=1)
 
 #
 # --- TESTING PUT ---
@@ -79,9 +79,14 @@ def putTest():
 def readTest():
 	try:
 		read("hello,from,js")
-		read("hello,from,python")
-		read("hello")
-		read("")
+	except:
+		print "A read failed or a timeout occurred"
+	try:
+		read("hello,from,java")
+	except:
+		print "A read failed or a timeout occurred"
+	try:
+		read("hello,from,js")
 	except:
 		print "A read failed or a timeout occurred"
 
@@ -91,7 +96,6 @@ def readTest():
 
 print "Connecting..."
 #putTest()
-readTest()
-print "Test complete."
-tuple = {'i': 'hello'}
-print encode(tuple)
+#readTest()
+read("bar,baz,boom")
+read("hello,from,python")
