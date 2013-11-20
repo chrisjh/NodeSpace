@@ -1,5 +1,5 @@
 // Production and development environment variables
-var isProduction = process.env.NODE_ENV === 'production';
+var isProduction = process.env.NODE_ENV === 'localhost';
 var devPort = 8888;
 
 // Module dependencies
@@ -138,14 +138,31 @@ io.sockets.on('connection', function(socket) {
     socket.on('findDocument', function(tuples) {
 
         tuples = tuples.toString();
+	var wildcard = "/.*/";	
+//	var wildcard = new RegExp(".*");
 
-        var constructJson = {
+//	console.log(wildcard);	
+
+
+	if (tuples.indexOf("?")>0){
+		console.log(tuples.indexOf("?"));
+		console.log('in if loop');
+		console.log(tuples);
+		tuples = tuples.replace("?", wildcard);
+//		tuples = tuples.replace("?", "/.*/");
+		console.log(tuples);
+	}
+
+	console.log(tuples);	
+
+	 var constructJson = {
             object: tuples.replace(/,$/, "").split(",").map(function(tuple) {
-                return {
+		 return {
                     i: tuple
                 };
             })
         };
+
 
         console.log('Trying to find tuple ' + JSON.stringify(constructJson));
 
