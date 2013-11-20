@@ -68,7 +68,8 @@ def putTest():
 		put(tupleTwo)
 		put("bar,baz,boom")
 		put(emptyTuple)
-		put("")
+		put("hello,from,java")
+		put("hello,from,js")
 	except:
 		print "An add failed or a timeout occurred"
 
@@ -86,7 +87,7 @@ def readTest():
 	except:
 		print "A read failed or a timeout occurred"
 	try:
-		read("hello,from,js")
+		read("hello,from,python")
 	except:
 		print "A read failed or a timeout occurred"
 
@@ -95,7 +96,8 @@ def readTest():
 # 
 
 print "Connecting..."
-#putTest()
-#readTest()
+putTest()
+time.sleep(3)
+readTest()
 read("bar,baz,boom")
 read("hello,from,python")
