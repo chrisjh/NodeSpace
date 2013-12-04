@@ -47,7 +47,11 @@ socket.on('connect', function(data) {
     });
 
     $('#put').click(function() {
-        console.log('Putting tuple in the space...')
+        console.log('Putting tuple in the space...');
+
+        $(".success").show();
+        $('#notifysuccess').html("Put(T) Successful");
+        $(".success").fadeOut(3000);
 
         var tuples = $('#putInput').val();
 
@@ -65,10 +69,47 @@ socket.on('connect', function(data) {
     socket.on('foundDocument', function(data) {
         console.log(data.foundTuple);
         if (data.foundTuple == 'no') {
+            $(".error").show();
+            $('#notifyerror').html("Read(T) Error");
+            $(".error").fadeOut(3000);
             console.log('Could not find tuple.');
             $('#foundTuple').html("Found tuple? " + data.foundTuple);
             $('#returnedTuple').html("None");
         } else {
+            $(".success").show();
+            $('#notifysuccess').html("Read(T) Successful");
+            $(".success").fadeOut(3000);
+            console.log('Found tuple!');
+            console.log(data);
+            $('#foundTuple').html("Found tuple? " + data.foundTuple);
+            $('#returnedTuple').html(JSON.stringify(data.tuple));
+            
+            console.log("The ID is: " + data.tuple.object[0]._id);
+            console.log("The first field is: " + data.tuple.object[0].i);
+            console.log("The second field is: " + data.tuple.object[1].i);
+            console.log("The third field is: " + data.tuple.object[2].i);
+        }
+    });
+
+    $('#take').click(function() {
+        var tuples = $('#takeInput').val();
+
+        socket.emit('takeDocument', tuples);
+    });
+
+    socket.on('foundTakeDocument', function(data) {
+        console.log(data.foundTuple);
+        if (data.foundTuple == 'no') {
+            $(".error").show();
+            $('#notifyerror').html("Read(T) Error");
+            $(".error").fadeOut(3000);
+            console.log('Could not find tuple.');
+            $('#foundTuple').html("Found tuple? " + data.foundTuple);
+            $('#returnedTuple').html("None");
+        } else {
+            $(".success").show();
+            $('#notifysuccess').html("Read(T) Successful");
+            $(".success").fadeOut(3000);
             console.log('Found tuple!');
             console.log(data);
             $('#foundTuple').html("Found tuple? " + data.foundTuple);
@@ -78,6 +119,23 @@ socket.on('connect', function(data) {
             console.log("The third field is: " + data.tuple.object[2].i);
         }
     });
+
+    $('#drop').click(function() {
+        socket.emit('dropSpace');
+    });
+
+    socket.on('spaceDropped', function(data) {
+        console.log(data.isDropped);
+        if (data.isDropped == 'yes') {
+            $(".success").show();
+            $('#notifysuccess').html("NodeSpace Dropped Successfully");
+            $(".success").fadeOut(3000);
+            console.log('Space dropped');
+            $('#foundTuple').html("Found tuple?");
+            $('#returnedTuple').html("None");
+        }
+    });
+
 });
 
 socket.on('reconnecting', function(data) {
