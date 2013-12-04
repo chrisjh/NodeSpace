@@ -6,6 +6,9 @@ block content
 
 	p(id="connections", style="font-size: 25px;") 1
 
+	div.success(id="notifysuccess")
+	div.error(id="notifyerror")
+
 	p
 		input(type="text", id="putInput")
 		button(id="put") Put(T)
@@ -17,6 +20,9 @@ block content
 	p
 		input(type="text", id="takeInput")
 		button(id="take") Take(T)
+
+	p
+		button(id="drop") Drop NodeSpace
 
 	p(id="foundTuple") Found tuple?
 	p(id="returnedTuple") None
