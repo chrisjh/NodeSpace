@@ -101,14 +101,14 @@ socket.on('connect', function(data) {
         console.log(data.foundTuple);
         if (data.foundTuple == 'no') {
             $(".error").show();
-            $('#notifyerror').html("Read(T) Error");
+            $('#notifyerror').html("Take(T) Error");
             $(".error").fadeOut(3000);
             console.log('Could not find tuple.');
             $('#foundTuple').html("Found tuple? " + data.foundTuple);
             $('#returnedTuple').html("None");
         } else {
             $(".success").show();
-            $('#notifysuccess').html("Read(T) Successful");
+            $('#notifysuccess').html("Take(T) Successful");
             $(".success").fadeOut(3000);
             console.log('Found tuple!');
             console.log(data);
