@@ -128,6 +128,12 @@ io.sockets.on('connection', function(socket) {
 
         console.log('Adding document: ' + JSON.stringify(constructJson));
 
+       /* collection.find(constructJson, function(err, result){
+            collection.update(result, {upsert: true}, function(err, inserted) {
+                console.log('Document added.');
+            })
+        });*/
+
         collection.insert(constructJson, function(err, inserted) {
             //TODO handle error
             console.log('Document added.');
@@ -181,12 +187,22 @@ io.sockets.on('connection', function(socket) {
         });
     });
 
-    //TODO: Actually remove tuples from the space.
-    //Processing for take()
-    socket.on('takeDocument', function(documentData) {
-        console.log('Taking document: ' + JSON.stringify(documentData));
+    //Processing for read()
+    socket.on('takeDocument', function(tuples) {
 
-        collection.find(documentData, {
+        tuples = tuples.toString();
+
+        var constructJson = {
+            object: tuples.replace(/,$/, "").split(",").map(function(tuple) {
+                return {
+                    i: tuple
+                };
+            })
+        };
+
+        console.log('Trying to take tuple ' + JSON.stringify(constructJson));
+
+        collection.find(constructJson, {
             _id: 0
         }, function(err, result) {
 
@@ -201,23 +217,34 @@ io.sockets.on('connection', function(socket) {
 
                 if (!IsValidJson(edited_result)) {
                     console.log('Could not find tuple.');
-                    socket.emit('foundDocument', {
+                    socket.emit('foundTakeDocument', {
                         'foundTuple': 'no'
                     });
                 } else {
                     final_result = JSON.parse(edited_result);
-                    if (JSON.stringify(documentData) === JSON.stringify(final_result)) {
+                    if (JSON.stringify(constructJson) === JSON.stringify(final_result)) {
                         console.log('Found document: ' + JSON.stringify(final_result));
-                        socket.emit('foundDocument', {
+                        socket.emit('foundTakeDocument', {
                             'foundTuple': 'yes',
-                            'tupleIs': final_result
+                            'tuple': final_result
                         });
+                        console.log("Removing tuple");
+                        collection.remove(constructJson, {
+                            _id: 0
+                        }, function(err, res) {});
                     }
                 }
             }
         });
     });
 
+    socket.on('dropSpace', function(){
+        console.log('dropping the space');
+        collection.drop();
+        socket.emit('spaceDropped', {
+            'isDropped': 'yes'
+        });
+    });
 
     socket.on('disconnect', function() {
         counter--;
