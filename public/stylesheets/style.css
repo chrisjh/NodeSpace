@@ -6,3 +6,19 @@ body {
 a {
   color: #00B7FF;
 }
+
+.success {
+    display: none;
+    margin: 0 0 13px;
+    padding: 10px;
+    border: solid 1px #bd8;
+    width: 200px;
+}
+
+.error {
+    display: none;
+    margin: 0 0 13px;
+    padding: 10px;
+    border: solid 1px red;
+    width: 200px;
+}
