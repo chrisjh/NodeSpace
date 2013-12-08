@@ -208,50 +208,10 @@ io.sockets.on('connection', function(socket) {
         p(inputTestJSON);
         p("");
 
-        /*var constructJson = {
-            object: tuples.replace(/,$/, "").split(",").map(function(tuple) {
-                return {
-                    i: tuple
-                };
-            })
-        };*/
-
-        //console.log('Adding document: ' + JSON.stringify(constructJson));
-
-        /*collection.find(inputTest, {
-            _id: 0
-        }, function(err, result) {
-
-            if (err) {
-                console.log(err);
-                console.log('There was an error finding the document.');
-            } else {
-
-                var edited_result = JSON.stringify(result);
-                edited_result = edited_result.substring(1);
-                edited_result = edited_result.substring(0, edited_result.length - 1);
-
-                if (!IsValidJson(edited_result)) {
-                    console.log('Could not find tuple... Adding a new one...');
-                    collection.insert(constructJson, function(err, inserted) {
-                        //TODO handle error
-                        console.log('Document added.');
-                    });
-                } else {
-                    final_result = JSON.parse(edited_result);
-                    if (JSON.stringify(constructJson) === JSON.stringify(final_result)) {
-                        console.log('Found document: ' + JSON.stringify(final_result));
-                        console.log('No need to add another...');
-                    }
-                }
-            }
-        });*/
-
         collection.insert(inputTest, function(err, inserted) {
             //TODO handle error
             console.log('Document added.');
         });
-
     });
 
     //Processing for read()
