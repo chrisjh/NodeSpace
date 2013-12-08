@@ -93,6 +93,10 @@ function IsValidJson(str) {
     return true;
 }
 
+function p(e) {
+    console.log(e);
+}
+
 io.sockets.on('connection', function(socket) {
 
     counter++;
@@ -159,141 +163,205 @@ io.sockets.on('connection', function(socket) {
     });
 
     //Processing for read()
-    socket.on('findDocument', function(tuples) {
+    socket.on('findDocument', function(input) {
 
-        var query = {name: new RegExp(".*") };
+        var inputString = input.toString();
+        var inputArray = inputString.split(',');
+        var inputCheckJSON = IsValidJson(input);
+        var inputStringify = JSON.stringify(input);
+        var inputJSON = JSON.parse(inputStringify);
 
-        tuples = tuples.toString();
+        p("### INPUT STRING ###");
+        p(inputString);
+        p("");
 
-        var constructJson = {
-            object: tuples.replace(/,$/, "").split(",").map(function(tuple) {
+        p("### INPUT ARRAY ###");
+        p(inputArray);
+        p("");
+
+        p("### INPUT CHECK JSON ###");
+        p(inputCheckJSON);
+        p("");
+
+        p("### INPUT STRINGIFY ###");
+        p(inputStringify);
+        p("");
+
+        p("### INPUT JSON ###");
+        p(inputJSON);
+        p("");
+
+
+        // Parse comma seperated list to JSON
+        var constructJSON = {
+            object: inputString.replace(/,$/, "").split(",").map(function(value) {
                 return {
-                    i: tuple
+                    i: value
                 };
             })
         };
 
-        var array = tuples.split(',');
+        // Find wildcards
+        // var regexp = /.*/;
+        // var wildcards = [];
 
-        console.log(array);
+        // for (var i = 0; i < array.length; i++) {
+        //     if (array[i] == "?"){
+        //         wildcards[i] = regexp;
+        //     } else {
+        //         wildcards[i] = array[i];
+        //     }
+        // }
+        // 
 
-        var json = "{object: {$elemMatch: {";
-
-        for (var i = 0; i < array.length; i++) {
-            if (i == array.length - 1) {
-                if(array[i] == "?"){
-                    json += "\"i\": " + query;
-                } else {
-                    json += "\"i\": " + "\""+array[i]+"\"";
+        //inputTest = { object: { $elemMatch : { i: /h*/, i: /w*/, i:/.*/ } } };
+        var reg = /.*/i;
+        //inputTest = { object: { $elemMatch : { i: /chr/i} } };
+        //var query = { i: reg, i: 'hendel'};
+        //
+        var query = inputString.replace(/,$/, "").split(",").map(function(value) {
+            if (value == "?") {
+                return {
+                    i: reg
                 }
             } else {
-                if(array[i] == "?"){
-                    json += "\"i\": " + query;
-                } else {
-                    json += "\"i\": " + "\""+array[i]+"\"" + ", ";
+                return {
+                    i: value
                 }
+            }
+        });
+
+        var queryString = query.toString();
+        var queryArray = queryString.split(',');
+        var queryCheckJSON = IsValidJson(query);
+        var queryStringify = JSON.stringify(query);
+        var queryJSON = JSON.parse(queryStringify);
+
+        p("### query STRING ###");
+        p(queryString);
+        p("");
+
+        p("### query ARRAY ###");
+        p(queryArray);
+        p("");
+
+        p("### query CHECK JSON ###");
+        p(queryCheckJSON);
+        p("");
+
+        p("### query STRINGIFY ###");
+        p(queryStringify);
+        p("");
+
+        p("### query JSON ###");
+        p(queryJSON);
+        p("");
+
+        p("The first element is....");
+        p(query[0].i);
+
+        //var queryMatch = { }
+        var queryMatch = {};
+
+        for (var x = 0; x < inputArray.length; x++){
+            if(inputArray[x] == "?"){
+                queryMatch['i'+x] = reg;
+            } else {
+                queryMatch['i'+x] = inputArray[x];
             }
         }
 
-        json += "}}}";
+        var queryMatchString = queryMatch.toString();
+        var queryMatchArray = queryMatchString.split(',');
+        var queryMatchCheckJSON = IsValidJson(queryMatch);
+        var queryMatchStringify = JSON.stringify(queryMatch);
+        var queryMatchJSON = JSON.parse(queryMatchStringify);
 
-        console.log(json);
+        p("### queryMatch STRING ###");
+        p(queryMatchString);
+        p("");
 
-        var realjson = IsValidJson(json);
+        p("### queryMatch ARRAY ###");
+        p(queryMatchArray);
+        p("");
 
-        console.log("Querying...");
+        p("### queryMatch CHECK JSON ###");
+        p(queryMatchCheckJSON);
+        p("");
 
-        console.log(JSON.stringify(constructJson));
-        
-        /*
-            Note: by setting the variable test, then using it as the query in find(), it works.
+        p("### queryMatch STRINGIFY ###");
+        p(queryMatchStringify);
+        p("");
 
-            Constructing it on my own above does not. There is some discrepency between JSON.parse
-            and writing clean JSON myself.
+        p("### queryMatch JSON ###");
+        p(queryMatchJSON);
+        p("");
 
-            Note: Fails on frontend if you have a query that will yield more than one result.
-         */
-        var test = { object: { $elemMatch : { i: /h*/, i: /w*/, i:/.*/ } } };
-
-        console.log("test");
-        console.log(test);
-        console.log("json");
-        console.log(json);
-
-        collection.find(test, {_id:0}, function(err, result) {
-            if (err) {
-                console.log(err);
-                console.log('There was an error finding the document.');
-            } else {
-
-                var edited_result = JSON.stringify(result);
-                edited_result = edited_result.substring(1);
-                edited_result = edited_result.substring(0, edited_result.length - 1);
-
-                console.log(edited_result);
-
-                if (!IsValidJson(edited_result)) {
-                    console.log('Could not find tuple.');
-                    socket.emit('foundDocument', {
-                        'foundTuple': 'no'
-                    });
-                } else {
-                    final_result = JSON.parse(edited_result);
-                    if (JSON.stringify(constructJson) === JSON.stringify(final_result)) {
-                        console.log('Found document: ' + JSON.stringify(final_result));
-                        socket.emit('foundDocument', {
-                            'foundTuple': 'yes',
-                            'tuple': final_result
-                        });
-                    }
-                }
+        var inputTest = {
+            object: {
+                $elemMatch: { i: 'chris', i: 'hendel' }
             }
-        });
-    });
-
-        /*        tuples = tuples.toString();
-
-        var constructJson = {
-            object: tuples.replace(/,$/, "").split(",").map(function(tuple) {
-                return {
-                    i: tuple
-                };
-            })
         };
 
-        console.log('Trying to find tuple ' + JSON.stringify(constructJson));
+        var inputTestString = inputTest.toString();
+        var inputTestArray = inputTestString.split(',');
+        var inputTestCheckJSON = IsValidJson(inputTest);
+        var inputTestStringify = JSON.stringify(inputTest);
+        var inputTestJSON = JSON.parse(inputTestStringify);
 
-        collection.find(constructJson, {
+        p("### inputTest STRING ###");
+        p(inputTestString);
+        p("");
+
+        p("### inputTest ARRAY ###");
+        p(inputTestArray);
+        p("");
+
+        p("### inputTest CHECK JSON ###");
+        p(inputTestCheckJSON);
+        p("");
+
+        p("### inputTest STRINGIFY ###");
+        p(inputTestStringify);
+        p("");
+
+        p("### inputTest JSON ###");
+        p(inputTestJSON);
+        p("");
+
+        collection.find(inputTest, {
             _id: 0
         }, function(err, result) {
-
             if (err) {
-                console.log(err);
-                console.log('There was an error finding the document.');
+                p(err);
+                p('There was an error finding the document.');
             } else {
+                var resultString = result.toString();
+                var resultArray = resultString.split(',');
+                var resultJSON = IsValidJson(result);
+                var resultStringify = JSON.stringify(result);
 
-                var edited_result = JSON.stringify(result);
-                edited_result = edited_result.substring(1);
-                edited_result = edited_result.substring(0, edited_result.length - 1);
+                p("### RESULT STRING ###");
+                p(resultString);
+                p("");
 
-                if (!IsValidJson(edited_result)) {
-                    console.log('Could not find tuple.');
-                    socket.emit('foundDocument', {
-                        'foundTuple': 'no'
-                    });
-                } else {
-                    final_result = JSON.parse(edited_result);
-                    if (JSON.stringify(constructJson) === JSON.stringify(final_result)) {
-                        console.log('Found document: ' + JSON.stringify(final_result));
-                        socket.emit('foundDocument', {
-                            'foundTuple': 'yes',
-                            'tuple': final_result
-                        });
-                    }
-                }
+                p("### RESULT ARRAY ###");
+                p(resultArray);
+                p("");
+
+                p("### RESULT JSON ###");
+                p(resultJSON);
+                p("");
+
+                p("### RESULT STRINGIFY ###");
+                p(resultStringify);
+                p("");
             }
         });
-    });*/
+
+
+    });
+
 
     //Processing for read()
     socket.on('takeDocument', function(tuples) {
