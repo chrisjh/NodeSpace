@@ -118,21 +118,107 @@ io.sockets.on('connection', function(socket) {
     });
 
     //Processing for put()
-    socket.on('addDocument', function(tuples) {
+    socket.on('addDocument', function(input) {
 
-        tuples = tuples.toString();
+        var inputString = input.toString();
+        var inputArray = inputString.split(',');
+        var inputCheckJSON = IsValidJson(input);
+        var inputStringify = JSON.stringify(input);
+        var inputJSON = JSON.parse(inputStringify);
 
-        var constructJson = {
+        p("### INPUT STRING ###");
+        p(inputString);
+        p("");
+
+        p("### INPUT ARRAY ###");
+        p(inputArray);
+        p("");
+
+        p("### INPUT CHECK JSON ###");
+        p(inputCheckJSON);
+        p("");
+
+        p("### INPUT STRINGIFY ###");
+        p(inputStringify);
+        p("");
+
+        p("### INPUT JSON ###");
+        p(inputJSON);
+        p("");
+
+        var inputData = {};
+
+        for (var x = 0; x < inputArray.length; x++) {
+            inputData['i' + x] = inputArray[x];
+        }
+
+        var inputDataString = inputData.toString();
+        var inputDataArray = inputDataString.split(',');
+        var inputDataCheckJSON = IsValidJson(inputData);
+        var inputDataStringify = JSON.stringify(inputData);
+        var inputDataJSON = JSON.parse(inputDataStringify);
+
+        p("### inputData STRING ###");
+        p(inputDataString);
+        p("");
+
+        p("### inputData ARRAY ###");
+        p(inputDataArray);
+        p("");
+
+        p("### inputData CHECK JSON ###");
+        p(inputDataCheckJSON);
+        p("");
+
+        p("### inputData STRINGIFY ###");
+        p(inputDataStringify);
+        p("");
+
+        p("### inputData JSON ###");
+        p(inputDataJSON);
+        p("");
+
+        var inputTest = {
+            object: [inputData]
+        };
+
+        var inputTestString = inputTest.toString();
+        var inputTestArray = inputTestString.split(',');
+        var inputTestCheckJSON = IsValidJson(inputTest);
+        var inputTestStringify = JSON.stringify(inputTest);
+        var inputTestJSON = JSON.parse(inputTestStringify);
+
+        p("### inputTest STRING ###");
+        p(inputTestString);
+        p("");
+
+        p("### inputTest ARRAY ###");
+        p(inputTestArray);
+        p("");
+
+        p("### inputTest CHECK JSON ###");
+        p(inputTestCheckJSON);
+        p("");
+
+        p("### inputTest STRINGIFY ###");
+        p(inputTestStringify);
+        p("");
+
+        p("### inputTest JSON ###");
+        p(inputTestJSON);
+        p("");
+
+        /*var constructJson = {
             object: tuples.replace(/,$/, "").split(",").map(function(tuple) {
                 return {
                     i: tuple
                 };
             })
-        };
+        };*/
 
-        console.log('Adding document: ' + JSON.stringify(constructJson));
+        //console.log('Adding document: ' + JSON.stringify(constructJson));
 
-        collection.find(constructJson, {
+        /*collection.find(inputTest, {
             _id: 0
         }, function(err, result) {
 
@@ -159,7 +245,13 @@ io.sockets.on('connection', function(socket) {
                     }
                 }
             }
+        });*/
+
+        collection.insert(inputTest, function(err, inserted) {
+            //TODO handle error
+            console.log('Document added.');
         });
+
     });
 
     //Processing for read()
@@ -191,83 +283,15 @@ io.sockets.on('connection', function(socket) {
         p(inputJSON);
         p("");
 
+        var regexp = /.*/i;
 
-        // Parse comma seperated list to JSON
-        var constructJSON = {
-            object: inputString.replace(/,$/, "").split(",").map(function(value) {
-                return {
-                    i: value
-                };
-            })
-        };
-
-        // Find wildcards
-        // var regexp = /.*/;
-        // var wildcards = [];
-
-        // for (var i = 0; i < array.length; i++) {
-        //     if (array[i] == "?"){
-        //         wildcards[i] = regexp;
-        //     } else {
-        //         wildcards[i] = array[i];
-        //     }
-        // }
-        // 
-
-        //inputTest = { object: { $elemMatch : { i: /h*/, i: /w*/, i:/.*/ } } };
-        var reg = /.*/i;
-        //inputTest = { object: { $elemMatch : { i: /chr/i} } };
-        //var query = { i: reg, i: 'hendel'};
-        //
-        var query = inputString.replace(/,$/, "").split(",").map(function(value) {
-            if (value == "?") {
-                return {
-                    i: reg
-                }
-            } else {
-                return {
-                    i: value
-                }
-            }
-        });
-
-        var queryString = query.toString();
-        var queryArray = queryString.split(',');
-        var queryCheckJSON = IsValidJson(query);
-        var queryStringify = JSON.stringify(query);
-        var queryJSON = JSON.parse(queryStringify);
-
-        p("### query STRING ###");
-        p(queryString);
-        p("");
-
-        p("### query ARRAY ###");
-        p(queryArray);
-        p("");
-
-        p("### query CHECK JSON ###");
-        p(queryCheckJSON);
-        p("");
-
-        p("### query STRINGIFY ###");
-        p(queryStringify);
-        p("");
-
-        p("### query JSON ###");
-        p(queryJSON);
-        p("");
-
-        p("The first element is....");
-        p(query[0].i);
-
-        //var queryMatch = { }
         var queryMatch = {};
 
-        for (var x = 0; x < inputArray.length; x++){
-            if(inputArray[x] == "?"){
-                queryMatch['i'+x] = reg;
+        for (var x = 0; x < inputArray.length; x++) {
+            if (inputArray[x] == "?") {
+                queryMatch['i' + x] = regexp;
             } else {
-                queryMatch['i'+x] = inputArray[x];
+                queryMatch['i' + x] = inputArray[x];
             }
         }
 
@@ -299,7 +323,7 @@ io.sockets.on('connection', function(socket) {
 
         var inputTest = {
             object: {
-                $elemMatch: { i: 'chris', i: 'hendel' }
+                $elemMatch: queryMatch
             }
         };
 
@@ -358,8 +382,6 @@ io.sockets.on('connection', function(socket) {
                 p("");
             }
         });
-
-
     });
 
 
