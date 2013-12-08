@@ -243,49 +243,97 @@ io.sockets.on('connection', function(socket) {
         p(inputJSON);
         p("");
 
-        var regexp = /.*/i;
-
-        var queryMatch = {};
-
-        for (var x = 0; x < inputArray.length; x++) {
-            if (inputArray[x] == "?") {
-                queryMatch['i' + x] = regexp;
-            } else {
-                queryMatch['i' + x] = inputArray[x];
+        // Check and see if there are any wildcards
+        var isWildcard = false;
+        for (var i = 0; i < inputArray.length; i++) {
+            if (inputArray[i] === "?") {
+                isWildcard = true;
             }
         }
 
-        var queryMatchString = queryMatch.toString();
-        var queryMatchArray = queryMatchString.split(',');
-        var queryMatchCheckJSON = IsValidJson(queryMatch);
-        var queryMatchStringify = JSON.stringify(queryMatch);
-        var queryMatchJSON = JSON.parse(queryMatchStringify);
+        // If there is a wildcard, use elemMatch. If not, then use the object
+        var query = {};
+        var queryMatch = {};
+        var inputTest;
+        var regexp = /.*/i;
 
-        p("### queryMatch STRING ###");
-        p(queryMatchString);
-        p("");
-
-        p("### queryMatch ARRAY ###");
-        p(queryMatchArray);
-        p("");
-
-        p("### queryMatch CHECK JSON ###");
-        p(queryMatchCheckJSON);
-        p("");
-
-        p("### queryMatch STRINGIFY ###");
-        p(queryMatchStringify);
-        p("");
-
-        p("### queryMatch JSON ###");
-        p(queryMatchJSON);
-        p("");
-
-        var inputTest = {
-            object: {
-                $elemMatch: queryMatch
+        if (!isWildcard) {
+            for (var x = 0; x < inputArray.length; x++) {
+                query['i' + x] = inputArray[x];
             }
-        };
+
+            inputTest = {
+                object: [query]
+            };
+        } else {
+            for (var x = 0; x < inputArray.length; x++) {
+                if (inputArray[x] === "?") {
+                    queryMatch['i' + x] = regexp;
+                } else {
+                    queryMatch['i' + x] = inputArray[x];
+                }
+            }
+            inputTest = {
+                object: {
+                    $elemMatch: queryMatch
+                }
+            };
+        }
+
+        // Debug
+        if (!isWildcard) {
+            var queryString = query.toString();
+            var queryArray = queryString.split(',');
+            var queryCheckJSON = IsValidJson(query);
+            var queryStringify = JSON.stringify(query);
+            var queryJSON = JSON.parse(queryStringify);
+
+            p("### query STRING ###");
+            p(queryString);
+            p("");
+
+            p("### query ARRAY ###");
+            p(queryArray);
+            p("");
+
+            p("### query CHECK JSON ###");
+            p(queryCheckJSON);
+            p("");
+
+            p("### query STRINGIFY ###");
+            p(queryStringify);
+            p("");
+
+            p("### query JSON ###");
+            p(queryJSON);
+            p("");
+        } else {
+            var queryMatchString = queryMatch.toString();
+            var queryMatchArray = queryMatchString.split(',');
+            var queryMatchCheckJSON = IsValidJson(queryMatch);
+            var queryMatchStringify = JSON.stringify(queryMatch);
+            var queryMatchJSON = JSON.parse(queryMatchStringify);
+
+            p("### queryMatch STRING ###");
+            p(queryMatchString);
+            p("");
+
+            p("### queryMatch ARRAY ###");
+            p(queryMatchArray);
+            p("");
+
+            p("### queryMatch CHECK JSON ###");
+            p(queryMatchCheckJSON);
+            p("");
+
+            p("### queryMatch STRINGIFY ###");
+            p(queryMatchStringify);
+            p("");
+
+            p("### queryMatch JSON ###");
+            p(queryMatchJSON);
+            p("");
+        }
 
         var inputTestString = inputTest.toString();
         var inputTestArray = inputTestString.split(',');
@@ -340,6 +388,17 @@ io.sockets.on('connection', function(socket) {
                 p("### RESULT STRINGIFY ###");
                 p(resultStringify);
                 p("");
+
+                if (result != "") {
+                    socket.emit('foundDocument', {
+                        'foundTuple': 'yes',
+                        'tuple': result
+                    });
+                } else {
+                    socket.emit('foundDocument', {
+                        'foundTuple': 'no'
+                    })
+                }
             }
         });
     });
