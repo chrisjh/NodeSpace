@@ -138,16 +138,19 @@ io.sockets.on('connection', function(socket) {
    socket.on('findDocument', function(tuples) {
 
        tuples = tuples.toString();
-var wildcard = new RegExp(/.*/);
+var wildcard = new RegExp("n.de");
 var contains_regex = false;
 var index = 0;
 
+var regex_data = { "$regex": "n.de", "$options": "i" };
+console.log(regex_data.$regex);
 
 if (tuples.indexOf("?")>0){
 index = tuples.indexOf("?");
 contains_regex = true;
-tuples = tuples.replace("?", wildcard);
+// tuples = tuples.replace("?", wildcard);
 }
+
 
 console.log(tuples);
 
@@ -159,6 +162,25 @@ return {
               };
           })
       };
+
+console.log(constructJson);
+
+for (var i = 0; i < constructJson.object.length; i++){
+console.log(constructJson.object[i]);
+if (constructJson.object[i] == " { i: ' node' }"){
+constructJson.object[i] = regex_data.$regex;
+}
+console.log(constructJson);
+}
+
+console.log(constructJson);
+// var jsontext = JSON.stringify(constructJson);
+// console.log(jsontext);
+// jsontext.replace(/node/g, regex_data.$regex);
+// console.log(jsontext);
+// int index = jsontext.indexOf('?');
+// var get_regex = JSON.parse(jsontext);
+// console.log(get_regex);
 
 //{ object: [ { i: '"random' }, { i: 'data' }, { i: 'tuple"' } ] }
 //{ object: [ { i: '"random' }, { i: ' /.*/' }, { i: ' tuple"' } ] }
