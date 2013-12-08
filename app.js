@@ -161,7 +161,97 @@ io.sockets.on('connection', function(socket) {
     //Processing for read()
     socket.on('findDocument', function(tuples) {
 
+        var query = {name: new RegExp(".*") };
+
         tuples = tuples.toString();
+
+        var constructJson = {
+            object: tuples.replace(/,$/, "").split(",").map(function(tuple) {
+                return {
+                    i: tuple
+                };
+            })
+        };
+
+        var array = tuples.split(',');
+
+        console.log(array);
+
+        var json = "{object: {$elemMatch: {";
+
+        for (var i = 0; i < array.length; i++) {
+            if (i == array.length - 1) {
+                if(array[i] == "?"){
+                    json += "\"i\": " + query;
+                } else {
+                    json += "\"i\": " + "\""+array[i]+"\"";
+                }
+            } else {
+                if(array[i] == "?"){
+                    json += "\"i\": " + query;
+                } else {
+                    json += "\"i\": " + "\""+array[i]+"\"" + ", ";
+                }
+            }
+        }
+
+        json += "}}}";
+
+        console.log(json);
+
+        var realjson = IsValidJson(json);
+
+        console.log("Querying...");
+
+        console.log(JSON.stringify(constructJson));
+        
+        /*
+            Note: by setting the variable test, then using it as the query in find(), it works.
+
+            Constructing it on my own above does not. There is some discrepency between JSON.parse
+            and writing clean JSON myself.
+
+            Note: Fails on frontend if you have a query that will yield more than one result.
+         */
+        var test = { object: { $elemMatch : { i: /h*/, i: /w*/, i:/.*/ } } };
+
+        console.log("test");
+        console.log(test);
+        console.log("json");
+        console.log(json);
+
+        collection.find(test, {_id:0}, function(err, result) {
+            if (err) {
+                console.log(err);
+                console.log('There was an error finding the document.');
+            } else {
+
+                var edited_result = JSON.stringify(result);
+                edited_result = edited_result.substring(1);
+                edited_result = edited_result.substring(0, edited_result.length - 1);
+
+                console.log(edited_result);
+
+                if (!IsValidJson(edited_result)) {
+                    console.log('Could not find tuple.');
+                    socket.emit('foundDocument', {
+                        'foundTuple': 'no'
+                    });
+                } else {
+                    final_result = JSON.parse(edited_result);
+                    if (JSON.stringify(constructJson) === JSON.stringify(final_result)) {
+                        console.log('Found document: ' + JSON.stringify(final_result));
+                        socket.emit('foundDocument', {
+                            'foundTuple': 'yes',
+                            'tuple': final_result
+                        });
+                    }
+                }
+            }
+        });
+    });
+
+        /*        tuples = tuples.toString();
 
         var constructJson = {
             object: tuples.replace(/,$/, "").split(",").map(function(tuple) {
@@ -203,7 +293,7 @@ io.sockets.on('connection', function(socket) {
                 }
             }
         });
-    });
+    });*/
 
     //Processing for read()
     socket.on('takeDocument', function(tuples) {
@@ -256,7 +346,7 @@ io.sockets.on('connection', function(socket) {
         });
     });
 
-    socket.on('dropSpace', function(){
+    socket.on('dropSpace', function() {
         console.log('dropping the space');
         collection.drop();
         socket.emit('spaceDropped', {
