@@ -49,21 +49,53 @@ socket.on('connect', function(data) {
     $('#put').click(function() {
         console.log('Putting tuple in the space...');
 
-        $(".success").show();
-        $('#notifysuccess').html("Put(T) Successful");
-        $(".success").fadeOut(3000);
+        var input = $('#putInput').val();
 
-        var tuples = $('#putInput').val();
+        console.log(input);
 
-        console.log(tuples);
+        socket.emit('addDocument', input);
+    });
 
-        socket.emit('addDocument', tuples);
+    socket.on('addedDocument', function(result) {
+
+        var resultStringify = JSON.stringify(result.data);
+
+        console.log(result.found);
+
+        if (result.found == 'yes' && result.added == 'no') {
+            $(".warn").show();
+            $('#notifywarn').html("Put(T) Warning: Document already exists");
+            $(".warn").fadeOut(5000);
+            console.log('### Put(T) Warning: Document aleady exists');
+            console.log(result);
+            $('#status').html("Status: Document already exists in NodeSpace.")
+            $('#returnedJSON').html(resultStringify);
+            $('#returnedCSV').html(result.csv);
+        } else if (result.found == 'no' && result.added == 'yes') {
+            $(".success").show();
+            $('#notifysuccess').html("Put(T) Successful");
+            $(".success").fadeOut(5000);
+            console.log('### Put(T) Successful: Document inserted');
+            console.log(result);
+            $('#status').html("Status: Document inserted into NodeSpace")
+            $('#returnedJSON').html(resultStringify);
+            $('#returnedCSV').html(result.csv);
+        } else if (result.found == 'no' && result.added == 'no' && result.error == 'yes') {
+            $(".error").show();
+            $('#notifyerror').html("Put(T) Error: Document insert failed");
+            $(".error").fadeOut(5000);
+            console.log('### Put(T) Warning: Document insert failed');
+            console.log(result);
+            $('#status').html("Status: Document failed to be inserted into NodeSpace.")
+            $('#added').html("Added? " + result.added);
+            $('#err').html(result.errorMsg);
+        }
     });
 
     $('#read').click(function() {
-        var tuples = $('#readInput').val();
+        var input = $('#readInput').val();
 
-        socket.emit('findDocument', tuples);
+        socket.emit('findDocument', input);
     });
 
     socket.on('foundDocument', function(result) {
@@ -72,30 +104,31 @@ socket.on('connect', function(data) {
 
         console.log(result.found);
 
-        if (result.found == 'no') {
-            $(".error").show();
-            $('#notifyerror').html("Read(T) Error");
-            $(".error").fadeOut(3000);
-            console.log('Could not find document.');
-            $('#found').html("Found? " + result.found);
-            $('#returnedJSON').html("No JSON");
-            $('#returnedArray').html("No Array");
-        } else {
+        if (result.found == 'yes') {
             $(".success").show();
             $('#notifysuccess').html("Read(T) Successful");
-            $(".success").fadeOut(3000);
-            console.log('Found document!');
+            $(".success").fadeOut(5000);
+            console.log('### Read(T) Successful: Document found');
             console.log(result);
-            $('#found').html("Found? " + result.found);
+            $('#status').html("Status: Document found in NodeSpace")
             $('#returnedJSON').html(resultStringify);
             $('#returnedCSV').html(result.csv);
+        } else if (result.found == 'no' || result.error == 'yes') {
+            $(".error").show();
+            $('#notifyerror').html("Read(T) Error: Document not found");
+            $(".error").fadeOut(5000);
+            console.log('### Read(T) Error: Document not found');
+            console.log(result);
+            $('#status').html("Status: Document not found in NodeSpace.")
+            $('#added').html("Added? " + result.added);
+            $('#err').html(result.error);
         }
     });
 
     $('#take').click(function() {
-        var tuples = $('#takeInput').val();
+        var input = $('#takeInput').val();
 
-        socket.emit('takeDocument', tuples);
+        socket.emit('takeDocument', input);
     });
 
     socket.on('foundTakeDocument', function(data) {
@@ -103,17 +136,15 @@ socket.on('connect', function(data) {
         if (data.foundTuple == 'no') {
             $(".error").show();
             $('#notifyerror').html("Take(T) Error");
-            $(".error").fadeOut(3000);
+            $(".error").fadeOut(5000);
             console.log('Could not find tuple.');
-            $('#foundTuple').html("Found tuple? " + data.foundTuple);
             $('#returnedTuple').html("None");
         } else {
             $(".success").show();
             $('#notifysuccess').html("Take(T) Successful");
-            $(".success").fadeOut(3000);
+            $(".success").fadeOut(5000);
             console.log('Found tuple!');
             console.log(data);
-            $('#foundTuple').html("Found tuple? " + data.foundTuple);
             $('#returnedTuple').html(JSON.stringify(data.tuple));
             console.log("The first field is: " + data.tuple.object[0].i);
             console.log("The second field is: " + data.tuple.object[1].i);
@@ -130,7 +161,7 @@ socket.on('connect', function(data) {
         if (data.isDropped == 'yes') {
             $(".success").show();
             $('#notifysuccess').html("NodeSpace Dropped Successfully");
-            $(".success").fadeOut(3000);
+            $(".success").fadeOut(5000);
             console.log('Space dropped');
             $('#foundTuple').html("Found tuple?");
             $('#returnedTuple').html("None");
