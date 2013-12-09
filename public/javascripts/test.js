@@ -66,28 +66,29 @@ socket.on('connect', function(data) {
         socket.emit('findDocument', tuples);
     });
 
-    socket.on('foundDocument', function(data) {
-        console.log(data.foundTuple);
-        if (data.foundTuple == 'no') {
+    socket.on('foundDocument', function(result) {
+
+        var resultStringify = JSON.stringify(result.data);
+
+        console.log(result.found);
+
+        if (result.found == 'no') {
             $(".error").show();
             $('#notifyerror').html("Read(T) Error");
             $(".error").fadeOut(3000);
-            console.log('Could not find tuple.');
-            $('#foundTuple').html("Found tuple? " + data.foundTuple);
-            $('#returnedTuple').html("None");
+            console.log('Could not find document.');
+            $('#found').html("Found? " + result.found);
+            $('#returnedJSON').html("No JSON");
+            $('#returnedArray').html("No Array");
         } else {
             $(".success").show();
             $('#notifysuccess').html("Read(T) Successful");
             $(".success").fadeOut(3000);
-            console.log('Found tuple!');
-            console.log(data);
-            $('#foundTuple').html("Found tuple? " + data.foundTuple);
-            $('#returnedTuple').html(JSON.stringify(data.tuple));
-            
-            console.log("The ID is: " + data.tuple.object[0]._id);
-            console.log("The first field is: " + data.tuple.object[0].i);
-            console.log("The second field is: " + data.tuple.object[1].i);
-            console.log("The third field is: " + data.tuple.object[2].i);
+            console.log('Found document!');
+            console.log(result);
+            $('#found').html("Found? " + result.found);
+            $('#returnedJSON').html(resultStringify);
+            $('#returnedCSV').html(result.csv);
         }
     });
 
@@ -134,6 +135,14 @@ socket.on('connect', function(data) {
             $('#foundTuple').html("Found tuple?");
             $('#returnedTuple').html("None");
         }
+    });
+
+    $('#prettify').click(function() {
+        var text = $('#returnedJSON').text();
+        var json = JSON.parse(text);
+        var prettyJSON = JSON.stringify(json, null, 2);
+        $('#returnedJSON').html(prettyJSON);
+        console.log(prettyJSON);
     });
 
 });
