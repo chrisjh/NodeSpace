@@ -17,6 +17,7 @@ var http = require('http');
 var path = require('path');
 var socketio = require('socket.io');
 var mongojs = require('mongojs');
+var testdb = require('./db');
 
 /**
  * Setup Express and MongoDB
@@ -83,9 +84,9 @@ io.configure(function() {
 });
 
 /*
-    Version 0.1.1 Test
+    Socket interactions
  */
-var users = {};
+var debug = false;
 var counter = 0;
 
 function IsValidJson(str) {
@@ -100,8 +101,6 @@ function IsValidJson(str) {
 function p(e) {
     console.log(e);
 }
-
-var debug = false;
 
 io.sockets.on('connection', function(socket) {
 
@@ -735,13 +734,92 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('dropSpace', function() {
-        p("dropping the space");
+        p("### The NodeSpace has been dropped.");
         collection.drop();
         socket.emit('spaceDropped', {
             'isDropped': 'yes'
         });
         socket.emit('clientConnected', {
             'count': counter
+        });
+    });
+
+    socket.on('fillSpace', function() {
+
+        testdb.data.forEach(function(obj) {
+            collection.find(obj, {
+                _id: 0
+            }, function(err, result) {
+                if (err) {
+                    p(err);
+                    p('### There was an error finding the document.');
+                    socket.emit('addedDocument'), {
+                        'found': 'no',
+                        'error': 'yes',
+                        'errorType': 'find',
+                        'added': 'no',
+                        'errorMsg': err
+                    }
+                } else {
+                    var resultString = result.toString();
+                    var resultArray = resultString.split(',');
+                    var resultJSON = IsValidJson(result);
+                    var resultStringify = JSON.stringify(result);
+
+                    if (debug) {
+                        p("### RESULT STRING ###");
+                        p(resultString);
+                        p("");
+
+                        p("### RESULT ARRAY ###");
+                        p(resultArray);
+                        p("");
+
+                        p("### RESULT JSON ###");
+                        p(resultJSON);
+                        p("");
+
+                        p("### RESULT STRINGIFY ###");
+                        p(resultStringify);
+                        p("");
+                    }
+
+                    if (result != "") {
+                        p("### The document already exists.");
+                        socket.emit('addedDocument', {
+                            'found': 'yes',
+                            'error': 'no',
+                            'added': 'no',
+                            'data': result,
+                            'array': resultArray,
+                            'string': resultString
+                        });
+                    } else {
+                        collection.insert(obj, function(err, inserted) {
+                            if (err) {
+                                p(err);
+                                p("### There was an error inserting the document.");
+                                socket.emit('addedDocument', {
+                                    'found': 'no',
+                                    'error': 'yes',
+                                    'errorType': 'insert',
+                                    'added': 'no',
+                                    'errorMsg': err
+                                });
+                            } else {
+                                p("### The document was successfully added.");
+                                p("### The NodeSpace has been populated.");
+                                socket.emit('spaceFilled', {
+                                    'isFilled': 'yes'
+                                });
+                                socket.emit('clientConnected', {
+                                    'count': counter
+                                });
+                            }
+                        });
+                    }
+                }
+            });
         });
     });
 
