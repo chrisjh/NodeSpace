@@ -107,20 +107,8 @@ io.sockets.on('connection', function(socket) {
 
     counter++;
     p("### Total connected clients: " + counter);
-
-    //Server receives a message that is not find, retreive, or add
-
-    socket.on('message', function(message) {
-        p("### Got message: " + message);
-        ip = socket.handshake.address.address;
-        url = message;
-        io.sockets.emit('pageview', {
-            'connections': Object.keys(io.connected).length,
-            'ip': '***.***.***.' + ip.substring(ip.lastIndexOf('.') + 1),
-            'url': url,
-            'xdomain': socket.handshake.xdomain,
-            'timestamp': new Date()
-        });
+    socket.emit('clientConnected', {
+        'count': counter
     });
 
     //Processing for put()
@@ -295,6 +283,9 @@ io.sockets.on('connection', function(socket) {
                     });
                 }
             }
+        });
+        socket.emit('clientConnected', {
+            'count': counter
         });
     });
 
@@ -506,6 +497,9 @@ io.sockets.on('connection', function(socket) {
                 }
             }
         });
+        socket.emit('clientConnected', {
+            'count': counter
+        });
     });
 
 
@@ -701,6 +695,7 @@ io.sockets.on('connection', function(socket) {
                 }
 
                 if (result != "") {
+                    p("### The document was found.");
                     socket.emit('tookDocument', {
                         'found': 'yes',
                         'error': 'no',
@@ -721,15 +716,21 @@ io.sockets.on('connection', function(socket) {
                                 'errorType': 'remove',
                                 'errorMsg': err
                             }
+                        } else {
+                            p("### The document has been removed.");
                         }
                     });
                 } else {
+                    p("### The document was not found.");
                     socket.emit('tookDocument', {
                         'found': 'no',
                         'error': 'no'
                     })
                 }
             }
+        });
+        socket.emit('clientConnected', {
+            'count': counter
         });
     });
 
@@ -739,13 +740,16 @@ io.sockets.on('connection', function(socket) {
         socket.emit('spaceDropped', {
             'isDropped': 'yes'
         });
+        socket.emit('clientConnected', {
+            'count': counter
+        });
     });
 
     socket.on('disconnect', function() {
         counter--;
-        p('TOTAL CONNECTION NUMBER = ' + counter);
-        io.sockets.emit('pageview', {
-            'connections': Object.keys(io.connected).length
+        p("### Total client connection: " + counter);
+        socket.emit('clientConnected', {
+            'count': counter
         });
     });
 });
