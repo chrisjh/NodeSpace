@@ -3,8 +3,11 @@ extends layout
 block content
 	h1= title
 	p Welcome to #{title}
-
-	p(id="connections", style="font-size: 25px;") 1
+	p
+		span
+			b(id="connections", style="font-size: 25px;") 1 
+		span 
+			b connection(s)
 
 	div.success(id="notifysuccess")
 	div.error(id="notifyerror")
@@ -22,7 +25,18 @@ block content
 		button(id="take") Take(T)
 
 	p
-		button(id="drop") Drop NodeSpace
+		span
+			button(id="drop") Drop NodeSpace
+		span
+			button(id="populate") Fill NodeSpace
 
-	p(id="foundTuple") Found tuple?
-	p(id="returnedTuple") None
+	p(id="found") Found?
+	p
+		span
+			b JSON 
+		span
+			button(id="prettify") Prettify
+	pre(id="returnedJSON")
+	p 
+		b CSV
+	p(id="returnedCSV")
