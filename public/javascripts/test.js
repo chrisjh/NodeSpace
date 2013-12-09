@@ -80,7 +80,7 @@ socket.on('connect', function(data) {
             $('#status').html("Status: Document inserted into NodeSpace")
             $('#returnedJSON').html(resultStringify);
             $('#returnedCSV').html(result.csv);
-        } else if (result.found == 'no' && result.added == 'no' && result.error == 'yes') {
+        } else if (result.found == 'no' && result.added == 'no') {
             $(".error").show();
             $('#notifyerror').html("Put(T) Error: Document insert failed");
             $(".error").fadeOut(5000);
@@ -88,7 +88,10 @@ socket.on('connect', function(data) {
             console.log(result);
             $('#status').html("Status: Document failed to be inserted into NodeSpace.")
             $('#added').html("Added? " + result.added);
-            $('#err').html(result.errorMsg);
+            if (result.error == 'yes') {
+                $('#errorType').html("Error on " + result.errorType);
+                $('#errorMsg').html(result.errorMsg);
+            }
         }
     });
 
@@ -113,15 +116,19 @@ socket.on('connect', function(data) {
             $('#status').html("Status: Document found in NodeSpace")
             $('#returnedJSON').html(resultStringify);
             $('#returnedCSV').html(result.csv);
-        } else if (result.found == 'no' || result.error == 'yes') {
+        } else if (result.found == 'no') {
             $(".error").show();
             $('#notifyerror').html("Read(T) Error: Document not found");
             $(".error").fadeOut(5000);
             console.log('### Read(T) Error: Document not found');
             console.log(result);
             $('#status').html("Status: Document not found in NodeSpace.")
-            $('#added').html("Added? " + result.added);
-            $('#err').html(result.error);
+            $('#returnedJSON').html(resultStringify);
+            $('#returnedCSV').html(result.csv);
+            if (result.error == 'yes') {
+                $('#errorType').html("Error on " + result.errorType);
+                $('#errorMsg').html(result.errorMsg);
+            }
         }
     });
 
@@ -131,24 +138,34 @@ socket.on('connect', function(data) {
         socket.emit('takeDocument', input);
     });
 
-    socket.on('foundTakeDocument', function(data) {
-        console.log(data.foundTuple);
-        if (data.foundTuple == 'no') {
-            $(".error").show();
-            $('#notifyerror').html("Take(T) Error");
-            $(".error").fadeOut(5000);
-            console.log('Could not find tuple.');
-            $('#returnedTuple').html("None");
-        } else {
+    socket.on('tookDocument', function(result) {
+
+        var resultStringify = JSON.stringify(result.data);
+
+        console.log(result.found);
+
+        if (result.found == 'yes') {
             $(".success").show();
             $('#notifysuccess').html("Take(T) Successful");
             $(".success").fadeOut(5000);
-            console.log('Found tuple!');
-            console.log(data);
-            $('#returnedTuple').html(JSON.stringify(data.tuple));
-            console.log("The first field is: " + data.tuple.object[0].i);
-            console.log("The second field is: " + data.tuple.object[1].i);
-            console.log("The third field is: " + data.tuple.object[2].i);
+            console.log('### Take(T) Successful: Document found and removed');
+            console.log(result);
+            $('#status').html("Status: Document found and removed from NodeSpace")
+            $('#returnedJSON').html(resultStringify);
+            $('#returnedCSV').html(result.csv);
+        } else if (result.found == 'no') {
+            $(".error").show();
+            $('#notifyerror').html("Take(T) Error: Document not found");
+            $(".error").fadeOut(5000);
+            console.log('### Take(T) Error: Document not found');
+            console.log(result);
+            $('#status').html("Status: Document not found in NodeSpace.")
+            $('#returnedJSON').html(resultStringify);
+            $('#returnedCSV').html(result.csv);
+            if (result.error == 'yes') {
+                $('#errorType').html("Error on " + result.errorType);
+                $('#errorMsg').html(result.errorMsg);
+            }
         }
     });
 
