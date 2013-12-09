@@ -1,12 +1,10 @@
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    padding: 50px;
+    font: 14px"Lucida Grande", Helvetica, Arial, sans-serif;
 }
-
 a {
-  color: #00B7FF;
+    color: #00B7FF;
 }
-
 .success {
     display: none;
     margin: 0 0 13px;
@@ -14,11 +12,17 @@ a {
     border: solid 1px #bd8;
     width: 200px;
 }
-
 .error {
     display: none;
     margin: 0 0 13px;
     padding: 10px;
     border: solid 1px red;
+    width: 200px;
+}
+.warn {
+    display: none;
+    margin: 0 0 13px;
+    padding: 10px;
+    border: solid 1px orange;
     width: 200px;
 }
