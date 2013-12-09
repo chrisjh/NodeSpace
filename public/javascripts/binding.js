@@ -176,8 +176,6 @@ socket.on('connect', function(data) {
             $(".success").fadeOut(5000);
             console.log('### NodeSpace dropped successfully');
             $('#status').html("Status: NodeSpace has been dropped.")
-            $('#returnedJSON').html(resultStringify);
-            $('#returnedCSV').html(result.csv);
         }
     });
 
@@ -214,7 +212,6 @@ socket.on('connect', function(data) {
         $('#returnedJSON').html(prettyJSON);
         console.log(prettyJSON);
     });
-
 });
 
 /**

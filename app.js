@@ -90,6 +90,7 @@ var connectedCount = 0;
  * Shorthand function for console.log
  * @param  Any e [Takes all variables]
  */
+
 function p(e) {
     console.log(e);
 }
@@ -98,6 +99,7 @@ function p(e) {
  * Emits a socket message to update clients on how many total clients are connected
  * @param int counter [Number of total connected clients]
  */
+
 function EmitClientConnected(counter) {
     io.sockets.emit('clientConnected', {
         'count': counter
@@ -632,7 +634,7 @@ io.sockets.on('connection', function(socket) {
             });
         });
     });
-    
+
     /**
      *  Relieves client from connection
      * @return [emits message]
