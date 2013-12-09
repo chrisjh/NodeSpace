@@ -229,6 +229,7 @@ io.sockets.on('connection', function(socket) {
                 socket.emit('addedDocument'), {
                     'found': 'no',
                     'error': 'yes',
+                    'errorType': 'find',
                     'added': 'no',
                     'errorMsg': err
                 }
@@ -275,6 +276,7 @@ io.sockets.on('connection', function(socket) {
                             socket.emit('addedDocument', {
                                 'found': 'no',
                                 'error': 'yes',
+                                'errorType': 'insert',
                                 'added': 'no',
                                 'errorMsg': err
                             });
@@ -338,7 +340,7 @@ io.sockets.on('connection', function(socket) {
         // If there is a wildcard, use elemMatch. If not, then use the object
         var query = {};
         var queryMatch = {};
-        var inputTest;
+        var readData;
         var regexp = /.*/i;
 
         if (!isWildcard) {
@@ -346,7 +348,7 @@ io.sockets.on('connection', function(socket) {
                 query['i' + x] = inputArray[x];
             }
 
-            inputTest = {
+            readData = {
                 object: [query]
             };
         } else {
@@ -357,7 +359,7 @@ io.sockets.on('connection', function(socket) {
                     queryMatch['i' + x] = inputArray[x];
                 }
             }
-            inputTest = {
+            readData = {
                 object: {
                     $elemMatch: queryMatch
                 }
@@ -423,35 +425,35 @@ io.sockets.on('connection', function(socket) {
             }
         }
 
-        var inputTestString = inputTest.toString();
-        var inputTestArray = inputTestString.split(',');
-        var inputTestCheckJSON = IsValidJson(inputTest);
-        var inputTestStringify = JSON.stringify(inputTest);
-        var inputTestJSON = JSON.parse(inputTestStringify);
+        var readDataString = readData.toString();
+        var readDataArray = readDataString.split(',');
+        var readDataCheckJSON = IsValidJson(readData);
+        var readDataStringify = JSON.stringify(readData);
+        var readDataJSON = JSON.parse(readDataStringify);
 
         if (debug) {
-            p("### inputTest STRING ###");
-            p(inputTestString);
+            p("### readData STRING ###");
+            p(readDataString);
             p("");
 
-            p("### inputTest ARRAY ###");
-            p(inputTestArray);
+            p("### readData ARRAY ###");
+            p(readDataArray);
             p("");
 
-            p("### inputTest CHECK JSON ###");
-            p(inputTestCheckJSON);
+            p("### readData CHECK JSON ###");
+            p(readDataCheckJSON);
             p("");
 
-            p("### inputTest STRINGIFY ###");
-            p(inputTestStringify);
+            p("### readData STRINGIFY ###");
+            p(readDataStringify);
             p("");
 
-            p("### inputTest JSON ###");
-            p(inputTestJSON);
+            p("### readData JSON ###");
+            p(readDataJSON);
             p("");
         }
 
-        collection.find(inputTest, {
+        collection.find(readData, {
             _id: 0
         }, function(err, result) {
             if (err) {
@@ -460,6 +462,7 @@ io.sockets.on('connection', function(socket) {
                 socket.emit('foundDocument'), {
                     'found': 'no',
                     'error': 'yes',
+                    'errorType': 'find',
                     'errorMsg': err
                 }
             } else {
@@ -506,52 +509,225 @@ io.sockets.on('connection', function(socket) {
     });
 
 
-    //Processing for read()
-    socket.on('takeDocument', function(tuples) {
+    //Processing for take()
+    socket.on('takeDocument', function(input) {
 
-        tuples = tuples.toString();
+        var inputString = input.toString();
+        var inputArray = inputString.split(',');
+        var inputCheckJSON = IsValidJson(input);
+        var inputStringify = JSON.stringify(input);
+        var inputJSON = JSON.parse(inputStringify);
 
-        var constructJson = {
-            object: tuples.replace(/,$/, "").split(",").map(function(tuple) {
-                return {
-                    i: tuple
-                };
-            })
-        };
+        if (debug) {
+            p("### INPUT STRING ###");
+            p(inputString);
+            p("");
 
-        p('Trying to take tuple ' + JSON.stringify(constructJson));
+            p("### INPUT ARRAY ###");
+            p(inputArray);
+            p("");
 
-        collection.find(constructJson, {
+            p("### INPUT CHECK JSON ###");
+            p(inputCheckJSON);
+            p("");
+
+            p("### INPUT STRINGIFY ###");
+            p(inputStringify);
+            p("");
+
+            p("### INPUT JSON ###");
+            p(inputJSON);
+            p("");
+        }
+
+        // Check and see if there are any wildcards
+        var isWildcard = false;
+        for (var i = 0; i < inputArray.length; i++) {
+            if (inputArray[i] === "?") {
+                isWildcard = true;
+            }
+        }
+
+        // If there is a wildcard, use elemMatch. If not, then use the object
+        var query = {};
+        var queryMatch = {};
+        var takeData;
+        var regexp = /.*/i;
+
+        if (!isWildcard) {
+            for (var x = 0; x < inputArray.length; x++) {
+                query['i' + x] = inputArray[x];
+            }
+
+            takeData = {
+                object: [query]
+            };
+        } else {
+            for (var x = 0; x < inputArray.length; x++) {
+                if (inputArray[x] === "?") {
+                    queryMatch['i' + x] = regexp;
+                } else {
+                    queryMatch['i' + x] = inputArray[x];
+                }
+            }
+            takeData = {
+                object: {
+                    $elemMatch: queryMatch
+                }
+            };
+        }
+
+        // Debug
+        if (!isWildcard) {
+            var queryString = query.toString();
+            var queryArray = queryString.split(',');
+            var queryCheckJSON = IsValidJson(query);
+            var queryStringify = JSON.stringify(query);
+            var queryJSON = JSON.parse(queryStringify);
+
+            if (debug) {
+                p("### query STRING ###");
+                p(queryString);
+                p("");
+
+                p("### query ARRAY ###");
+                p(queryArray);
+                p("");
+
+                p("### query CHECK JSON ###");
+                p(queryCheckJSON);
+                p("");
+
+                p("### query STRINGIFY ###");
+                p(queryStringify);
+                p("");
+
+                p("### query JSON ###");
+                p(queryJSON);
+                p("");
+            }
+        } else {
+            var queryMatchString = queryMatch.toString();
+            var queryMatchArray = queryMatchString.split(',');
+            var queryMatchCheckJSON = IsValidJson(queryMatch);
+            var queryMatchStringify = JSON.stringify(queryMatch);
+            var queryMatchJSON = JSON.parse(queryMatchStringify);
+
+            if (debug) {
+                p("### queryMatch STRING ###");
+                p(queryMatchString);
+                p("");
+
+                p("### queryMatch ARRAY ###");
+                p(queryMatchArray);
+                p("");
+
+                p("### queryMatch CHECK JSON ###");
+                p(queryMatchCheckJSON);
+                p("");
+
+                p("### queryMatch STRINGIFY ###");
+                p(queryMatchStringify);
+                p("");
+
+                p("### queryMatch JSON ###");
+                p(queryMatchJSON);
+                p("");
+            }
+        }
+
+        var takeDataString = takeData.toString();
+        var takeDataArray = takeDataString.split(',');
+        var takeDataCheckJSON = IsValidJson(takeData);
+        var takeDataStringify = JSON.stringify(takeData);
+        var takeDataJSON = JSON.parse(takeDataStringify);
+
+        if (debug) {
+            p("### takeData STRING ###");
+            p(takeDataString);
+            p("");
+
+            p("### takeData ARRAY ###");
+            p(takeDataArray);
+            p("");
+
+            p("### takeData CHECK JSON ###");
+            p(takeDataCheckJSON);
+            p("");
+
+            p("### takeData STRINGIFY ###");
+            p(takeDataStringify);
+            p("");
+
+            p("### takeData JSON ###");
+            p(takeDataJSON);
+            p("");
+        }
+
+        collection.find(takeData, {
             _id: 0
         }, function(err, result) {
-
             if (err) {
                 p(err);
-                p('There was an error finding the document.');
+                p("### There was an error finding the document.");
+                socket.emit('tookDocument'), {
+                    'found': 'no',
+                    'error': 'yes',
+                    'errorType': 'find',
+                    'errorMsg': err
+                }
             } else {
+                var resultString = result.toString();
+                var resultArray = resultString.split(',');
+                var resultJSON = IsValidJson(result);
+                var resultStringify = JSON.stringify(result);
 
-                var edited_result = JSON.stringify(result);
-                edited_result = edited_result.substring(1);
-                edited_result = edited_result.substring(0, edited_result.length - 1);
+                if (debug) {
+                    p("### RESULT STRING ###");
+                    p(resultString);
+                    p("");
 
-                if (!IsValidJson(edited_result)) {
-                    p('Could not find tuple.');
-                    socket.emit('foundTakeDocument', {
-                        'foundTuple': 'no'
+                    p("### RESULT ARRAY ###");
+                    p(resultArray);
+                    p("");
+
+                    p("### RESULT JSON ###");
+                    p(resultJSON);
+                    p("");
+
+                    p("### RESULT STRINGIFY ###");
+                    p(resultStringify);
+                    p("");
+                }
+
+                if (result != "") {
+                    socket.emit('tookDocument', {
+                        'found': 'yes',
+                        'error': 'no',
+                        'data': result,
+                        'array': resultArray,
+                        'string': resultString,
+                        'csv': input
+                    });
+                    collection.remove(takeData, {
+                        _id: 0
+                    }, function(err, res) {
+                        if (err) {
+                            p(err);
+                            p("### There was an error removing the document.");
+                            socket.emit('tookDocument'), {
+                                'found': 'no',
+                                'error': 'yes',
+                                'errorType': 'remove',
+                                'errorMsg': err
+                            }
+                        }
                     });
                 } else {
-                    final_result = JSON.parse(edited_result);
-                    if (JSON.stringify(constructJson) === JSON.stringify(final_result)) {
-                        p('Found document: ' + JSON.stringify(final_result));
-                        socket.emit('foundTakeDocument', {
-                            'foundTuple': 'yes',
-                            'tuple': final_result
-                        });
-                        p("Removing tuple");
-                        collection.remove(constructJson, {
-                            _id: 0
-                        }, function(err, res) {});
-                    }
+                    socket.emit('tookDocument', {
+                        'found': 'no',
+                        'error': 'no'
+                    })
                 }
             }
         });
