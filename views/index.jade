@@ -8,29 +8,26 @@ block content
 			b(id="connections", style="font-size: 25px;") 1 
 		span 
 			b connection(s)
-
 	div.success(id="notifysuccess")
 	div.error(id="notifyerror")
-
+	div.warn(id="notifywarn")
 	p
 		input(type="text", id="putInput")
 		button(id="put") Put(T)
-
 	p
 		input(type="text", id="readInput")
 		button(id="read") Read(T)
-
 	p
 		input(type="text", id="takeInput")
 		button(id="take") Take(T)
-
 	p
 		span
 			button(id="drop") Drop NodeSpace
 		span
 			button(id="populate") Fill NodeSpace
-
-	p(id="found") Found?
+	p
+		i(id="status") Status
+	p(id="err")
 	p
 		span
 			b JSON 
