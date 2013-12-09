@@ -19,9 +19,7 @@ var socketio = require('socket.io');
 var mongojs = require('mongojs');
 var testdb = require('./db');
 
-/**
- * Setup Express and MongoDB
- */
+//Setup Express and MongoDB
 var app = express();
 var db = mongojs('nodespace');
 var collection = db.collection('space');
@@ -53,6 +51,7 @@ app.configure('development', function() {
 app.get('/', routes.index);
 app.get('/users', user.list);
 
+// Start server
 var server = app.listen(app.get('port'), function() {
     console.log('Express server listening on port ' + app.get('port'));
 });
@@ -83,62 +82,56 @@ io.configure(function() {
     });
 });
 
-/*
-    Socket interactions
- */
+// Socket interactions
 var debug = false;
-var counter = 0;
+var connectedCount = 0;
 
-function IsValidJson(str) {
-    try {
-        JSON.parse(str);
-    } catch (e) {
-        return false;
-    }
-    return true;
-}
-
+/**
+ * Shorthand function for console.log
+ * @param  Any e [Takes all variables]
+ */
 function p(e) {
     console.log(e);
 }
 
-io.sockets.on('connection', function(socket) {
-
-    counter++;
-    p("### Total connected clients: " + counter);
-    socket.emit('clientConnected', {
+/** 
+ * Emits a socket message to update clients on how many total clients are connected
+ * @param int counter [Number of total connected clients]
+ */
+function EmitClientConnected(counter) {
+    io.sockets.emit('clientConnected', {
         'count': counter
     });
+}
 
-    //Processing for put()
+/** 
+ * Main socket function - enables all possible messages when client connects
+ * @param  var socket [callback]
+ */
+io.sockets.on('connection', function(socket) {
+
+    connectedCount++;
+    p('### Total connected clients: ' + connectedCount);
+    EmitClientConnected(connectedCount);
+
+    /**
+     * Put(T) function
+     * @param  var input [callback]
+     * @return [emits message]
+     */
     socket.on('addDocument', function(input) {
 
         var inputString = input.toString();
         var inputArray = inputString.split(',');
-        var inputCheckJSON = IsValidJson(input);
-        var inputStringify = JSON.stringify(input);
-        var inputJSON = JSON.parse(inputStringify);
 
         if (debug) {
-            p("### INPUT STRING ###");
+            p('### inputString ###');
             p(inputString);
-            p("");
+            p('');
 
-            p("### INPUT ARRAY ###");
+            p('### inputArray ###');
             p(inputArray);
-            p("");
-
-            p("### INPUT CHECK JSON ###");
-            p(inputCheckJSON);
-            p("");
-
-            p("### INPUT STRINGIFY ###");
-            p(inputStringify);
-            p("");
-
-            p("### INPUT JSON ###");
-            p(inputJSON);
-            p("");
+            p('');
         }
 
         var inputData = {};
@@ -149,30 +142,15 @@ io.sockets.on('connection', function(socket) {
 
         var inputDataString = inputData.toString();
         var inputDataArray = inputDataString.split(',');
-        var inputDataCheckJSON = IsValidJson(inputData);
-        var inputDataStringify = JSON.stringify(inputData);
-        var inputDataJSON = JSON.parse(inputDataStringify);
 
         if (debug) {
-            p("### inputData STRING ###");
+            p('### inputDataString ###');
             p(inputDataString);
-            p("");
+            p('');
 
-            p("### inputData ARRAY ###");
+            p('### inputDataArray ###');
             p(inputDataArray);
-            p("");
-
-            p("### inputData CHECK JSON ###");
-            p(inputDataCheckJSON);
-            p("");
-
-            p("### inputData STRINGIFY ###");
-            p(inputDataStringify);
-            p("");
-
-            p("### inputData JSON ###");
-            p(inputDataJSON);
-            p("");
+            p('');
         }
 
         var putData = {
@@ -181,30 +159,15 @@ io.sockets.on('connection', function(socket) {
 
         var putDataString = putData.toString();
         var putDataArray = putDataString.split(',');
-        var putDataCheckJSON = IsValidJson(putData);
-        var putDataStringify = JSON.stringify(putData);
-        var putDataJSON = JSON.parse(putDataStringify);
 
         if (debug) {
-            p("### putData STRING ###");
+            p('### putDataString ###');
             p(putDataString);
-            p("");
+            p('');
 
-            p("### putData ARRAY ###");
+            p('### putDataArray ###');
             p(putDataArray);
-            p("");
-
-            p("### putData CHECK JSON ###");
-            p(putDataCheckJSON);
-            p("");
-
-            p("### putData STRINGIFY ###");
-            p(putDataStringify);
-            p("");
-
-            p("### putData JSON ###");
-            p(putDataJSON);
-            p("");
+            p('');
         }
 
         collection.find(putData, {
@@ -213,39 +176,29 @@ io.sockets.on('connection', function(socket) {
             if (err) {
                 p(err);
                 p('### There was an error finding the document.');
-                socket.emit('addedDocument'), {
+                socket.emit('addedDocument', {
                     'found': 'no',
                     'error': 'yes',
                     'errorType': 'find',
                     'added': 'no',
                     'errorMsg': err
-                }
+                });
             } else {
                 var resultString = result.toString();
                 var resultArray = resultString.split(',');
-                var resultJSON = IsValidJson(result);
-                var resultStringify = JSON.stringify(result);
 
                 if (debug) {
-                    p("### RESULT STRING ###");
+                    p('### resultString ###');
                     p(resultString);
-                    p("");
+                    p('');
 
-                    p("### RESULT ARRAY ###");
+                    p('### resultArray ###');
                     p(resultArray);
-                    p("");
-
-                    p("### RESULT JSON ###");
-                    p(resultJSON);
-                    p("");
-
-                    p("### RESULT STRINGIFY ###");
-                    p(resultStringify);
-                    p("");
+                    p('');
                 }
 
-                if (result != "") {
-                    p("### The document already exists.");
+                if (result != '') {
+                    p('### The document already exists.');
                     socket.emit('addedDocument', {
                         'found': 'yes',
                         'error': 'no',
@@ -255,11 +208,12 @@ io.sockets.on('connection', function(socket) {
                         'string': resultString,
                         'csv': input
                     });
+
                 } else {
                     collection.insert(putData, function(err, inserted) {
                         if (err) {
                             p(err);
-                            p("### There was an error inserting the document.");
+                            p('### There was an error inserting the document.');
                             socket.emit('addedDocument', {
                                 'found': 'no',
                                 'error': 'yes',
@@ -268,7 +222,7 @@ io.sockets.on('connection', function(socket) {
                                 'errorMsg': err
                             });
                         } else {
-                            p("### The document was successfully added.");
+                            p('### The document was successfully added.');
                             socket.emit('addedDocument', {
                                 'found': 'no',
                                 'error': 'no',
@@ -283,46 +237,32 @@ io.sockets.on('connection', function(socket) {
                 }
             }
         });
-        socket.emit('clientConnected', {
-            'count': counter
-        });
     });
 
-    //Processing for read()
+    /**
+     * Read(T) function
+     * @param  var input [callback]
+     * @return [emits message]
+     */
     socket.on('findDocument', function(input) {
 
         var inputString = input.toString();
         var inputArray = inputString.split(',');
-        var inputCheckJSON = IsValidJson(input);
-        var inputStringify = JSON.stringify(input);
-        var inputJSON = JSON.parse(inputStringify);
 
         if (debug) {
-            p("### INPUT STRING ###");
+            p('### INPUTString ###');
             p(inputString);
-            p("");
+            p('');
 
-            p("### INPUT ARRAY ###");
+            p('### INPUTArray ###');
             p(inputArray);
-            p("");
-
-            p("### INPUT CHECK JSON ###");
-            p(inputCheckJSON);
-            p("");
-
-            p("### INPUT STRINGIFY ###");
-            p(inputStringify);
-            p("");
-
-            p("### INPUT JSON ###");
-            p(inputJSON);
-            p("");
+            p('');
         }
 
         // Check and see if there are any wildcards
         var isWildcard = false;
         for (var i = 0; i < inputArray.length; i++) {
-            if (inputArray[i] === "?") {
+            if (inputArray[i] === '?') {
                 isWildcard = true;
             }
         }
@@ -343,7 +283,7 @@ io.sockets.on('connection', function(socket) {
             };
         } else {
             for (var x = 0; x < inputArray.length; x++) {
-                if (inputArray[x] === "?") {
+                if (inputArray[x] === '?') {
                     queryMatch['i' + x] = regexp;
                 } else {
                     queryMatch['i' + x] = inputArray[x];
@@ -356,91 +296,46 @@ io.sockets.on('connection', function(socket) {
             };
         }
 
-        // Debug
+        // Debug for queries
         if (!isWildcard) {
             var queryString = query.toString();
             var queryArray = queryString.split(',');
-            var queryCheckJSON = IsValidJson(query);
-            var queryStringify = JSON.stringify(query);
-            var queryJSON = JSON.parse(queryStringify);
 
             if (debug) {
-                p("### query STRING ###");
+                p('### queryString ###');
                 p(queryString);
-                p("");
+                p('');
 
-                p("### query ARRAY ###");
+                p('### queryArray ###');
                 p(queryArray);
-                p("");
-
-                p("### query CHECK JSON ###");
-                p(queryCheckJSON);
-                p("");
-
-                p("### query STRINGIFY ###");
-                p(queryStringify);
-                p("");
-
-                p("### query JSON ###");
-                p(queryJSON);
-                p("");
+                p('');
             }
         } else {
             var queryMatchString = queryMatch.toString();
             var queryMatchArray = queryMatchString.split(',');
-            var queryMatchCheckJSON = IsValidJson(queryMatch);
-            var queryMatchStringify = JSON.stringify(queryMatch);
-            var queryMatchJSON = JSON.parse(queryMatchStringify);
 
             if (debug) {
-                p("### queryMatch STRING ###");
+                p('### queryMatchString ###');
                 p(queryMatchString);
-                p("");
+                p('');
 
-                p("### queryMatch ARRAY ###");
+                p('### queryMatchArray ###');
                 p(queryMatchArray);
-                p("");
-
-                p("### queryMatch CHECK JSON ###");
-                p(queryMatchCheckJSON);
-                p("");
-
-                p("### queryMatch STRINGIFY ###");
-                p(queryMatchStringify);
-                p("");
-
-                p("### queryMatch JSON ###");
-                p(queryMatchJSON);
-                p("");
+                p('');
             }
         }
 
         var readDataString = readData.toString();
         var readDataArray = readDataString.split(',');
-        var readDataCheckJSON = IsValidJson(readData);
-        var readDataStringify = JSON.stringify(readData);
-        var readDataJSON = JSON.parse(readDataStringify);
 
         if (debug) {
-            p("### readData STRING ###");
+            p('### readDataString ###');
             p(readDataString);
-            p("");
+            p('');
 
-            p("### readData ARRAY ###");
+            p('### readDataArray ###');
             p(readDataArray);
-            p("");
-
-            p("### readData CHECK JSON ###");
-            p(readDataCheckJSON);
-            p("");
-
-            p("### readData STRINGIFY ###");
-            p(readDataStringify);
-            p("");
-
-            p("### readData JSON ###");
-            p(readDataJSON);
-            p("");
+            p('');
         }
 
         collection.find(readData, {
@@ -448,38 +343,29 @@ io.sockets.on('connection', function(socket) {
         }, function(err, result) {
             if (err) {
                 p(err);
-                p("### There was an error finding the document.");
-                socket.emit('foundDocument'), {
+                p('### There was an error finding the document.');
+                socket.emit('foundDocument', {
                     'found': 'no',
                     'error': 'yes',
                     'errorType': 'find',
                     'errorMsg': err
-                }
+                });
+
             } else {
                 var resultString = result.toString();
                 var resultArray = resultString.split(',');
-                var resultJSON = IsValidJson(result);
-                var resultStringify = JSON.stringify(result);
 
                 if (debug) {
-                    p("### RESULT STRING ###");
+                    p('### resultString ###');
                     p(resultString);
-                    p("");
+                    p('');
 
-                    p("### RESULT ARRAY ###");
+                    p('### resultArray ###');
                     p(resultArray);
-                    p("");
-
-                    p("### RESULT JSON ###");
-                    p(resultJSON);
-                    p("");
-
-                    p("### RESULT STRINGIFY ###");
-                    p(resultStringify);
-                    p("");
+                    p('');
                 }
 
-                if (result != "") {
+                if (result != '') {
                     socket.emit('foundDocument', {
                         'found': 'yes',
                         'error': 'no',
@@ -488,55 +374,43 @@ io.sockets.on('connection', function(socket) {
                         'string': resultString,
                         'csv': input
                     });
+
                 } else {
                     socket.emit('foundDocument', {
                         'found': 'no',
                         'error': 'no'
-                    })
+                    });
+
                 }
             }
-        });
-        socket.emit('clientConnected', {
-            'count': counter
         });
     });
 
 
-    //Processing for take()
+    /**
+     * Take(T) function
+     * @param  var input [callback]
+     * @return [emits message]
+     */
     socket.on('takeDocument', function(input) {
 
         var inputString = input.toString();
         var inputArray = inputString.split(',');
-        var inputCheckJSON = IsValidJson(input);
-        var inputStringify = JSON.stringify(input);
-        var inputJSON = JSON.parse(inputStringify);
 
         if (debug) {
-            p("### INPUT STRING ###");
+            p('### INPUTString ###');
             p(inputString);
-            p("");
+            p('');
 
-            p("### INPUT ARRAY ###");
+            p('### INPUTArray ###');
             p(inputArray);
-            p("");
-
-            p("### INPUT CHECK JSON ###");
-            p(inputCheckJSON);
-            p("");
-
-            p("### INPUT STRINGIFY ###");
-            p(inputStringify);
-            p("");
-
-            p("### INPUT JSON ###");
-            p(inputJSON);
-            p("");
+            p('');
         }
 
         // Check and see if there are any wildcards
         var isWildcard = false;
         for (var i = 0; i < inputArray.length; i++) {
-            if (inputArray[i] === "?") {
+            if (inputArray[i] === '?') {
                 isWildcard = true;
             }
         }
@@ -557,7 +431,7 @@ io.sockets.on('connection', function(socket) {
             };
         } else {
             for (var x = 0; x < inputArray.length; x++) {
-                if (inputArray[x] === "?") {
+                if (inputArray[x] === '?') {
                     queryMatch['i' + x] = regexp;
                 } else {
                     queryMatch['i' + x] = inputArray[x];
@@ -570,91 +444,46 @@ io.sockets.on('connection', function(socket) {
             };
         }
 
-        // Debug
+        // Debug for queries
         if (!isWildcard) {
             var queryString = query.toString();
             var queryArray = queryString.split(',');
-            var queryCheckJSON = IsValidJson(query);
-            var queryStringify = JSON.stringify(query);
-            var queryJSON = JSON.parse(queryStringify);
 
             if (debug) {
-                p("### query STRING ###");
+                p('### queryString ###');
                 p(queryString);
-                p("");
+                p('');
 
-                p("### query ARRAY ###");
+                p('### queryArray ###');
                 p(queryArray);
-                p("");
-
-                p("### query CHECK JSON ###");
-                p(queryCheckJSON);
-                p("");
-
-                p("### query STRINGIFY ###");
-                p(queryStringify);
-                p("");
-
-                p("### query JSON ###");
-                p(queryJSON);
-                p("");
+                p('');
             }
         } else {
             var queryMatchString = queryMatch.toString();
             var queryMatchArray = queryMatchString.split(',');
-            var queryMatchCheckJSON = IsValidJson(queryMatch);
-            var queryMatchStringify = JSON.stringify(queryMatch);
-            var queryMatchJSON = JSON.parse(queryMatchStringify);
 
             if (debug) {
-                p("### queryMatch STRING ###");
+                p('### queryMatchString ###');
                 p(queryMatchString);
-                p("");
+                p('');
 
-                p("### queryMatch ARRAY ###");
+                p('### queryMatchArray ###');
                 p(queryMatchArray);
-                p("");
-
-                p("### queryMatch CHECK JSON ###");
-                p(queryMatchCheckJSON);
-                p("");
-
-                p("### queryMatch STRINGIFY ###");
-                p(queryMatchStringify);
-                p("");
-
-                p("### queryMatch JSON ###");
-                p(queryMatchJSON);
-                p("");
+                p('');
             }
         }
 
         var takeDataString = takeData.toString();
         var takeDataArray = takeDataString.split(',');
-        var takeDataCheckJSON = IsValidJson(takeData);
-        var takeDataStringify = JSON.stringify(takeData);
-        var takeDataJSON = JSON.parse(takeDataStringify);
 
         if (debug) {
-            p("### takeData STRING ###");
+            p('### takeDataString ###');
             p(takeDataString);
-            p("");
+            p('');
 
-            p("### takeData ARRAY ###");
+            p('### takeDataArray ###');
             p(takeDataArray);
-            p("");
-
-            p("### takeData CHECK JSON ###");
-            p(takeDataCheckJSON);
-            p("");
-
-            p("### takeData STRINGIFY ###");
-            p(takeDataStringify);
-            p("");
-
-            p("### takeData JSON ###");
-            p(takeDataJSON);
-            p("");
+            p('');
         }
 
         collection.find(takeData, {
@@ -662,7 +491,7 @@ io.sockets.on('connection', function(socket) {
         }, function(err, result) {
             if (err) {
                 p(err);
-                p("### There was an error finding the document.");
+                p('### There was an error finding the document.');
                 socket.emit('tookDocument'), {
                     'found': 'no',
                     'error': 'yes',
@@ -672,29 +501,19 @@ io.sockets.on('connection', function(socket) {
             } else {
                 var resultString = result.toString();
                 var resultArray = resultString.split(',');
-                var resultJSON = IsValidJson(result);
-                var resultStringify = JSON.stringify(result);
 
                 if (debug) {
-                    p("### RESULT STRING ###");
+                    p('### resultString ###');
                     p(resultString);
-                    p("");
+                    p('');
 
-                    p("### RESULT ARRAY ###");
+                    p('### resultArray ###');
                     p(resultArray);
-                    p("");
-
-                    p("### RESULT JSON ###");
-                    p(resultJSON);
-                    p("");
-
-                    p("### RESULT STRINGIFY ###");
-                    p(resultStringify);
-                    p("");
+                    p('');
                 }
 
-                if (result != "") {
-                    p("### The document was found.");
+                if (result != '') {
+                    p('### The document was found.');
                     socket.emit('tookDocument', {
                         'found': 'yes',
                         'error': 'no',
@@ -708,7 +527,7 @@ io.sockets.on('connection', function(socket) {
                     }, function(err, res) {
                         if (err) {
                             p(err);
-                            p("### There was an error removing the document.");
+                            p('### There was an error removing the document.');
                             socket.emit('tookDocument'), {
                                 'found': 'no',
                                 'error': 'yes',
@@ -716,34 +535,37 @@ io.sockets.on('connection', function(socket) {
                                 'errorMsg': err
                             }
                         } else {
-                            p("### The document has been removed.");
+                            p('### The document has been removed.');
                         }
                     });
                 } else {
-                    p("### The document was not found.");
+                    p('### The document was not found.');
                     socket.emit('tookDocument', {
                         'found': 'no',
                         'error': 'no'
-                    })
+                    });
+
                 }
             }
         });
-        socket.emit('clientConnected', {
-            'count': counter
-        });
     });
 
+    /**
+     * Drops all curent data in the NodeSpace
+     * @return [emits message]
+     */
     socket.on('dropSpace', function() {
-        p("### The NodeSpace has been dropped.");
+        p('### The NodeSpace has been dropped.');
         collection.drop();
         socket.emit('spaceDropped', {
             'isDropped': 'yes'
         });
-        socket.emit('clientConnected', {
-            'count': counter
-        });
     });
 
+    /**
+     * Populates NodeSpace with test data from db.js
+     * @return [emits message]
+     */
     socket.on('fillSpace', function() {
 
         testdb.data.forEach(function(obj) {
@@ -763,29 +585,19 @@ io.sockets.on('connection', function(socket) {
                 } else {
                     var resultString = result.toString();
                     var resultArray = resultString.split(',');
-                    var resultJSON = IsValidJson(result);
-                    var resultStringify = JSON.stringify(result);
 
                     if (debug) {
-                        p("### RESULT STRING ###");
+                        p('### resultString ###');
                         p(resultString);
-                        p("");
+                        p('');
 
-                        p("### RESULT ARRAY ###");
+                        p('### resultArray ###');
                         p(resultArray);
-                        p("");
-
-                        p("### RESULT JSON ###");
-                        p(resultJSON);
-                        p("");
-
-                        p("### RESULT STRINGIFY ###");
-                        p(resultStringify);
-                        p("");
+                        p('');
                     }
 
-                    if (result != "") {
-                        p("### The document already exists.");
+                    if (result != '') {
+                        p('### The document already exists.');
                         socket.emit('addedDocument', {
                             'found': 'yes',
                             'error': 'no',
@@ -798,7 +610,7 @@ io.sockets.on('connection', function(socket) {
                         collection.insert(obj, function(err, inserted) {
                             if (err) {
                                 p(err);
-                                p("### There was an error inserting the document.");
+                                p('### There was an error inserting the document.');
                                 socket.emit('addedDocument', {
                                     'found': 'no',
                                     'error': 'yes',
@@ -807,14 +619,12 @@ io.sockets.on('connection', function(socket) {
                                     'errorMsg': err
                                 });
                             } else {
-                                p("### The document was successfully added.");
-                                p("### The NodeSpace has been populated.");
+                                p('### The document was successfully added.');
+                                p('### The NodeSpace has been populated.');
                                 socket.emit('spaceFilled', {
                                     'isFilled': 'yes'
                                 });
-                                socket.emit('clientConnected', {
-                                    'count': counter
-                                });
+
                             }
                         });
                     }
@@ -822,12 +632,14 @@ io.sockets.on('connection', function(socket) {
             });
         });
     });
-
+    
+    /**
+     *  Relieves client from connection
+     * @return [emits message]
+     */
     socket.on('disconnect', function() {
-        counter--;
-        p("### Total client connection: " + counter);
-        socket.emit('clientConnected', {
-            'count': counter
-        });
+        connectedCount--;
+        p('### Total client connection: ' + connectedCount);
+        EmitClientConnected(connectedCount);
     });
 });
