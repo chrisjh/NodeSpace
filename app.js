@@ -1,6 +1,13 @@
 // Production and development environment variables
-var isProduction = process.env.NODE_ENV === 'production';
-var devPort = 8888;
+var isProduction = false;
+var port;
+if (isProduction) {
+    process.env.NODE_ENV === 'production';
+    port = 80;
+} else {
+    process.env.NODE_ENV === 'development';
+    port = 8888;
+}
 
 // Module dependencies
 var express = require('express');
@@ -15,15 +22,12 @@ var mongojs = require('mongojs');
  * Setup Express and Mongo
  */
 var app = express();
-
 var db = mongojs('nodespace');
 var collection = db.collection('space');
 
-var app = express();
-
 // All environments
 app.configure(function() {
-    app.set('port', process.env.PORT || devPort);
+    app.set('port', process.env.PORT || port);
     app.set('views', __dirname + '/views');
     app.set('view engine', 'jade');
     app.use(express.favicon());
